@@ -185,7 +185,81 @@ app.post("/ideas", (req, res) => {
 });
 
 app.post("/users/registration", (req, res) => {
-  // const { }
+  const { first_name, last_name, nickname, email, password } = req.body;
+
+  if (!first_name) {
+    logger.error(
+      'POST "/users/registration" first_name missing in request body'
+    );
+    return res.status(400).send("Invalid Data");
+  }
+  if (!last_name) {
+    logger.error(
+      'POST "/users/registration" last_name missing in request body'
+    );
+    return res.status(400).send("Invalid Data");
+  }
+  if (!nickname) {
+    logger.error('POST "/users/registration" nickname missing in request body');
+    return res.status(400).send("Invalid Data");
+  }
+  if (!email) {
+    logger.error('POST "/users/registration" email missing in request body');
+    return res.status(400).send("Invalid Data");
+  }
+  if (!password) {
+    logger.error('POST "/users/registration" password missing in request body');
+    return res.status(400).send("Invalid Data");
+  }
+
+  const previousId = users[users.length - 1].id;
+  const id = parseInt(previousId) + 1;
+  const votes = 0;
+
+  const newUser = {
+    id,
+    first_name,
+    last_name,
+    email,
+    password,
+    nickname,
+    votes
+  };
+
+  users.push(newUser);
+
+  res
+    .status(201)
+    .location(`http://localhost:8000/ideas/${id}`)
+    .json(newUser);
+});
+
+app.post("/users/login", (req, res) => {
+  const { email, password } = req.body;
+  const user = users.find(user => user.email === email);
+
+  if (!email) {
+    logger.error(`POST "/users/login" email missing from request body`);
+    return res.status(400).send("Invalid request");
+  }
+
+  if (!password) {
+    logger.error(`POST "/users/login" password missing from request body`);
+    return res.status(400).send("Invalid request");
+  }
+
+  if (!user) {
+    logger.error(`POST "/users/login" the user doesn't exist`);
+    return res.status(400).send("Invalid request");
+  }
+
+  if (user.password !== password) {
+    logger.error(`POST "/users/login" passwords do not match`);
+    return res.status(401).send("Unauthorized");
+  }
+
+  res.status(204).end();
+  logger.info(`POST "/users/login" user ${user.id} logged in`);
 });
 
 app.use(function errorHandler(error, req, res, next) {
