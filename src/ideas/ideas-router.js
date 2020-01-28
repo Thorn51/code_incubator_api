@@ -87,6 +87,16 @@ ideasRouter
     logger.info(`GET "/ideas/:id" - idea.id ${id} delivered`);
     res.json(idea);
   })
-  .delete((req, res) => {});
+  .delete((req, res) => {
+    const { id } = req.params;
+    const ideaIndex = ideas.findIndex(idea => idea.id === id);
+
+    if (ideaIndex === -1) {
+      logger.error(`DELETE "/ideas/:id" comment id=${id} not found`);
+      return res.status(404).send("Not Found");
+    }
+    res.status(204).end();
+    logger.info(`DELETE "/ideas/:id" -> idea with id ${id} deleted`);
+  });
 
 module.exports = ideasRouter;

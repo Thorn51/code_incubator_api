@@ -32,9 +32,19 @@ usersRouter
       return res.status(404).send("User not found");
     }
     logger.info(`GET "/users/:id" -> user.id=${id} delivered`);
-    res.status(200).json(user);
+    res.status(200).json({ id });
   })
-  .delete((req, res) => {});
+  .delete((req, res) => {
+    const { id } = req.params;
+    const userIndex = users.findIndex(user => user.id === id);
+
+    if (userIndex === -1) {
+      logger.error(`DELETE "/users/:id" user id=${id} not found`);
+      return res.status(404).send("Not Found");
+    }
+    res.status(204).end;
+    logger.info(`DELETE "/users/:id" -> user with id ${id} deleted`);
+  });
 
 usersRouter.route("/users/registration").post(bodyParser, (req, res) => {
   const { first_name, last_name, nickname, email, password } = req.body;

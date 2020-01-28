@@ -66,6 +66,16 @@ commentsRouter
     logger.info(`GET "/comments/:id" -> comment.id=${id} delivered`);
     res.status(200).json(comment);
   })
-  .delete((req, res) => {});
+  .delete((req, res) => {
+    const { id } = req.params;
+    const commentIndex = comments.findIndex(comment => comment.id === id);
+
+    if (commentIndex === -1) {
+      logger.error(`DELETE "/comments/:id" comment id=${id} not found`);
+      return res.status(404).send("Not Found");
+    }
+    res.status(204).end();
+    logger.info(`DELETE "/comments/:id" -> comment with id ${id} deleted`);
+  });
 
 module.exports = commentsRouter;
