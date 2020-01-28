@@ -80,22 +80,22 @@ app.use(function validateBearerToken(req, res, next) {
 
 app.get("/", (req, res) => {
   res.send("Hello, world!");
-  logger.info(`"/" response status 200`);
+  logger.info(`GET "/" response status 200`);
 });
 
 app.get("/ideas", (req, res) => {
   res.json(ideas);
-  logger.info(`"/ideas" response status 200`);
+  logger.info(`GET "/ideas" response status 200`);
 });
 
 app.get("/comments", (req, res) => {
   res.json(comments);
-  logger.info(`"/comments" response status 200`);
+  logger.info(`GET "/comments" response status 200`);
 });
 
 app.get("/users", (req, res) => {
   res.status(200).json(users);
-  logger.info(`"/users" response status 200`);
+  logger.info(`GET "/users" response status 200`);
 });
 
 app.get("/ideas/:id", (req, res) => {
@@ -103,10 +103,10 @@ app.get("/ideas/:id", (req, res) => {
   const idea = ideas.find(idea => idea.id === id);
 
   if (!idea) {
-    logger.error(`"/ideas/:id" id=${id} -> idea not found`);
+    logger.error(`GET "/ideas/:id" id=${id} -> idea not found`);
     return res.status(404).send("Idea not found");
   }
-  logger.info(`"/ideas/:id" - idea.id ${id} delivered`);
+  logger.info(`GET "/ideas/:id" - idea.id ${id} delivered`);
   res.json(idea);
 });
 
@@ -115,10 +115,10 @@ app.get("/comments/:id", (req, res) => {
   const comment = comments.find(comment => comment.id === id);
 
   if (!comment) {
-    logger.error(`"/comments/:id" id=${id} -> comment not found`);
+    logger.error(`GET "/comments/:id" id=${id} -> comment not found`);
     return res.status(404).send("Comment not found");
   }
-  logger.info(`"/comments/:id" -> comment.id=${id} delivered`);
+  logger.info(`GET "/comments/:id" -> comment.id=${id} delivered`);
   res.status(200).json(comment);
 });
 
@@ -127,11 +127,65 @@ app.get("/users/:id", (req, res) => {
   const user = users.find(user => user.id === id);
 
   if (!user) {
-    logger.error(`"/users/:id" id=${id} -> user not found`);
+    logger.error(`GET "/users/:id" id=${id} -> user not found`);
     return res.status(404).send("User not found");
   }
-  logger.info(`"/users/:id" -> user.id=${id} delivered`);
+  logger.info(`GET "/users/:id" -> user.id=${id} delivered`);
   res.status(200).json(user);
+});
+
+app.post("/ideas", (req, res) => {
+  const {
+    user_id,
+    project_title,
+    project_summary,
+    date_submitted,
+    status = "idea",
+    github = "",
+    votes = 0
+  } = req.body;
+
+  if (!user_id) {
+    logger.error(`POST "/ideas" user_id missing in request body`);
+    return res.status(400).send("Invalid data");
+  }
+
+  if (!project_title) {
+    logger.error(`POST "/ideas" project_title missing in request body`);
+    return res.status(400).send("Invalid data");
+  }
+
+  if (!project_summary) {
+    logger.error(`POST "/ideas" project_summary missing in request body`);
+    return res.status(400).send("Invalid data");
+  }
+
+  const previousId = ideas[ideas.length - 1].id;
+  const id = parseInt(previousId) + 1;
+
+  const idea = {
+    id,
+    user_id,
+    project_title,
+    project_summary,
+    date_submitted,
+    status,
+    github,
+    votes
+  };
+
+  ideas.push(idea);
+
+  logger.info(`POST "/ideas" idea id=${id} created`);
+
+  res
+    .status(201)
+    .location(`http://localhost:8000/ideas/${id}`)
+    .json(idea);
+});
+
+app.post("/users/registration", (req, res) => {
+  // const { }
 });
 
 app.use(function errorHandler(error, req, res, next) {
