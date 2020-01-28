@@ -64,7 +64,7 @@ usersRouter.route("/users/registration").post(bodyParser, (req, res) => {
     return res.status(400).send("Invalid Data");
   }
 
-  const previousId = users[users.length - 1].id;
+  const previousId = users.length === 0 ? 0 : users[users.length - 1].id;
   const id = parseInt(previousId) + 1;
   const votes = 0;
 

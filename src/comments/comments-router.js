@@ -30,7 +30,8 @@ commentsRouter
       return res.status(400).send("Invalid data");
     }
 
-    const previousId = comments[comments.length - 1].id;
+    const previousId =
+      comments.length === 0 ? 0 : comments[comments.length - 1].id;
     const id = parseInt(previousId) + 1;
     const votes = 0;
 

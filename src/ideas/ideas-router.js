@@ -50,7 +50,7 @@ ideasRouter
       return res.status(400).send("Invalid data");
     }
 
-    const previousId = ideas[ideas.length - 1].id;
+    const previousId = ideas.length === 0 ? 0 : ideas[ideas.length - 1].id;
     const id = parseInt(previousId) + 1;
 
     const idea = {
