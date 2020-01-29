@@ -1,0 +1,1 @@
+describe("Ideas service object", () => {});
