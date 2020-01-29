@@ -1,27 +1,19 @@
 const express = require("express");
 const logger = require("../logger");
+const IdeasService = require("./ideas-service");
 
 const ideasRouter = express.Router();
 const bodyParser = express.json();
 
-const ideas = [
-  {
-    id: "1",
-    user_id: "1",
-    project_title: "First Project",
-    project_summary:
-      "Lorem ipsum dolor sit amet, te autem soluta facilisi vel, feugiat perfecto sapientem sit ei, in sit electram abhorreant. Ne nam aeterno labitur admodum, qui timeam quaerendum ullamcorper ut. Porro debet molestie eu duo, sea no essent feugait. In nec atqui scaevola, ea sed everti sanctus convenire. Ea quod discere pri, hinc incorrupte ne his.",
-    date_submitted: "12.21.19",
-    status: "Idea",
-    github: "fake_url",
-    votes: "5"
-  }
-];
-
 ideasRouter
   .route("/ideas")
   .get((req, res) => {
-    res.json(ideas);
+    const knexInstance = req.app.get("db");
+    IdeasService.getAllArticles(knexInstance)
+      .then(ideas => {
+        res.json(ideas);
+      })
+      .catch(next);
     logger.info(`GET "/ideas" response status 200`);
   })
   .post(bodyParser, (req, res) => {
