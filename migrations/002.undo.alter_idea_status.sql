@@ -1,0 +1,3 @@
+ALTER TABLE ideas DROP COLUMN IF EXISTS status;
+
+DROP TYPE IF EXISTS project_status;
