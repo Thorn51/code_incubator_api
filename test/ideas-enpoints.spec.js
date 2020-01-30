@@ -3,7 +3,7 @@ const knex = require("knex");
 const app = require("../src/app");
 const { makeIdeasArray } = require("./fixtures");
 
-describe("Ideas Endpoints", () => {
+describe.only("Ideas Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -74,17 +74,33 @@ describe("Ideas Endpoints", () => {
     });
   });
 
-  describe.only("POST /ideas", () => {
+  describe("POST /ideas", () => {
     it("Responds with status 201, return new idea, and inserts new idea into database", () => {
+      const newIdea = {
+        project_title: "Test Post Endpoint",
+        project_summary: "Testing if the ideas endpoint will successfully post"
+      };
       return supertest(app)
         .post("/ideas")
         .set("Authorization", "bearer " + process.env.API_TOKEN)
-        .send({
-          project_title: "Test Post Endpoint",
-          project_summary:
-            "Testing if the ideas endpoint will successfully post"
+        .send(newIdea)
+        .expect(201)
+        .expect(res => {
+          expect(res.body.project_title).to.eql(newIdea.project_title);
+          expect(res.body.project_summary).to.eql(newIdea.project_summary);
+          expect(res.body).to.have.property("id");
+          expect(res.body).to.have.property("votes");
+          expect(res.body).to.have.property("date_submitted");
+          expect(res.body).to.have.property("status");
+          expect(res.body).to.have.property("votes");
+          expect(res.headers.location).to.eql(`/ideas/${res.body.id}`);
         })
-        .expect(201);
+        .then(postRes =>
+          supertest(app)
+            .get(`/ideas/${postRes.body.id}`)
+            .set("Authorization", "bearer " + process.env.API_TOKEN)
+            .expect(postRes.body)
+        );
     });
   });
 });
