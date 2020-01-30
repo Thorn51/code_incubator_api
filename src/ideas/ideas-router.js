@@ -6,7 +6,7 @@ const ideasRouter = express.Router();
 const bodyParser = express.json();
 
 ideasRouter
-  .route("/ideas")
+  .route("/")
   .get((req, res, next) => {
     const knexInstance = req.app.get("db");
     IdeasService.getAllIdeas(knexInstance)
@@ -26,13 +26,26 @@ ideasRouter
       .catch(next);
     logger.info(`GET "/ideas" response status 200`);
   })
-  .post(bodyParser, (req, res) => {
-    IdeasService.insertIdea(req.app.get("db"), newIdea);
+  .post(bodyParser, (req, res, next) => {
+    const {
+      project_title,
+      project_summary,
+      github = "",
+      status = "Idea",
+      votes = 0
+    } = req.body;
 
+    const newIdea = {
+      project_title,
+      project_summary,
+      github,
+      status,
+      votes
+    };
     // if (!user_id) {
     //   logger.error(`POST "/ideas" user_id missing in request body`);
     //   return res.status(400).send("Invalid data");
-    // }
+    // }console.log(req.body);
 
     if (!project_title) {
       logger.error(`POST "/ideas" project_title missing in request body`);
@@ -44,32 +57,19 @@ ideasRouter
       return res.status(400).send("Invalid data");
     }
 
-    const previousId = ideas.length === 0 ? 0 : ideas[ideas.length - 1].id;
-    const id = parseInt(previousId) + 1;
-
-    const newIdea = {
-      id,
-      user_id,
-      project_title,
-      project_summary,
-      date_submitted,
-      status,
-      github,
-      votes
-    };
-
-    IdeasService.insertIdea(req.app.get("db"), newIdea).then(() => {
-      res
-        .status(201)
-        .location(`http://localhost:8000/ideas/${id}`)
-        .json(idea);
-    });
-
-    logger.info(`POST "/ideas" idea id=${id} created`);
+    IdeasService.insertIdea(req.app.get("db"), newIdea)
+      .then(idea => {
+        res
+          .status(201)
+          .location(`/ideas/${idea.id}`)
+          .json(idea);
+        logger.info(`POST "/ideas" idea id=${idea.id} created`);
+      })
+      .catch(next);
   });
 
 ideasRouter
-  .route("/ideas/:id")
+  .route("/:id")
   .get((req, res, next) => {
     IdeasService.getById(req.app.get("db"), req.params.id)
       .then(idea => {
