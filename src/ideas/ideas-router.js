@@ -49,13 +49,25 @@ ideasRouter
 
     if (!project_title) {
       logger.error(`POST "/ideas" project_title missing in request body`);
-      return res.status(400).send("Invalid data");
+      return res.status(400).json({
+        error: { message: `Missing 'project_title' in request body.` }
+      });
     }
 
     if (!project_summary) {
       logger.error(`POST "/ideas" project_summary missing in request body`);
-      return res.status(400).send("Invalid data");
+      return res.status(400).json({
+        error: { message: `Missing 'project_summary' in request body.` }
+      });
     }
+
+    // for (const [key, value] of Object.entries(newIdea)) {
+    //   if (value === null) {
+    //     return res.status(400).json({
+    //       error: { message: `Missing '${key}' in request body.` }
+    //     });
+    //   }
+    // }
 
     IdeasService.insertIdea(req.app.get("db"), newIdea)
       .then(idea => {
