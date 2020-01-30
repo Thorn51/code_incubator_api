@@ -1,6 +1,6 @@
 CREATE TYPE project_status AS ENUM (
     'Idea',
-    'In-Development'
+    'In-Development',
     'Complete'
 );
 
