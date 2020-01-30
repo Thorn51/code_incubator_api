@@ -33,4 +33,19 @@ function makeIdeasArray() {
   ];
 }
 
-module.exports = { makeIdeasArray };
+function makeXssIdea() {
+  return [
+    {
+      id: 1,
+      project_title: '<script>alert("xss");</script>',
+      project_summary:
+        '<img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.',
+      date_submitted: "2020-01-30T07:00:00.000Z",
+      status: "Idea",
+      github: "",
+      votes: 0
+    }
+  ];
+}
+
+module.exports = { makeIdeasArray, makeXssIdea };
