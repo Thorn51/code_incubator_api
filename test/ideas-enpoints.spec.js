@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const knex = require("knex");
 const app = require("../src/app");
-const { makeIdeasArray } = require("./fixtures");
+const { makeIdeasArray, makeXssIdea } = require("./fixtures");
 
 describe.only("Ideas Endpoints", () => {
   let db;
@@ -46,7 +46,7 @@ describe.only("Ideas Endpoints", () => {
     });
   });
 
-  describe("GET /ideas/:id", () => {
+  describe.only("GET /ideas/:id", () => {
     context("No data in ideas table", () => {
       it("Responds with error 404", () => {
         const noIdeaId = 200;
@@ -70,6 +70,29 @@ describe.only("Ideas Endpoints", () => {
           .get(`/ideas/${queryId}`)
           .set("Authorization", "bearer " + process.env.API_TOKEN)
           .expect(200, expectedArticle);
+      });
+    });
+
+    context("Given an XSS attack idea", () => {
+      const xssIdea = makeXssIdea();
+
+      beforeEach("insert malicious article", () => {
+        return db.into("ideas").insert(xssIdea);
+      });
+
+      it("removes XSS content", () => {
+        return supertest(app)
+          .get(`/ideas/${xssIdea[0].id}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(200)
+          .expect(res => {
+            expect(res.body.project_title).to.eql(
+              '&lt;script&gt;alert("xss");&lt;/script&gt;'
+            );
+            expect(res.body.project_summary).to.eql(
+              '<img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.'
+            );
+          });
       });
     });
   });
@@ -101,6 +124,28 @@ describe.only("Ideas Endpoints", () => {
             .set("Authorization", "bearer " + process.env.API_TOKEN)
             .expect(postRes.body)
         );
+    });
+
+    const requiredFields = ["project_title", "project_summary"];
+
+    requiredFields.forEach(field => {
+      const newIdea = {
+        project_title: "Test Idea Post",
+        project_summary:
+          "Test that the validation checks are working properly to ensure required fields are submitted."
+      };
+
+      it(`responds with status 400 when '${field}' is missing from request body`, () => {
+        delete newIdea[field];
+
+        return supertest(app)
+          .post("/ideas")
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(newIdea)
+          .expect(400, {
+            error: { message: `Missing '${field}' in request body.` }
+          });
+      });
     });
   });
 });
