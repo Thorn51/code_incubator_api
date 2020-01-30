@@ -6,6 +6,7 @@ const { NODE_ENV } = require("./config");
 const ideasRouter = require("./ideas/ideas-router");
 const commentsRouter = require("./comments/comments-router");
 const usersRouter = require("./users/users-router");
+const logger = require("./logger");
 
 const app = express();
 
