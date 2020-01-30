@@ -7,30 +7,32 @@ const bodyParser = express.json();
 
 ideasRouter
   .route("/ideas")
-  .get((req, res) => {
+  .get((req, res, next) => {
     const knexInstance = req.app.get("db");
-    IdeasService.getAllArticles(knexInstance)
+    IdeasService.getAllIdeas(knexInstance)
       .then(ideas => {
-        res.json(ideas);
+        res.json(
+          ideas.map(idea => ({
+            id: idea.id,
+            project_title: idea.project_title,
+            project_summary: idea.project_summary,
+            date_submitted: new Date(idea.date_submitted),
+            status: idea.status,
+            github: idea.github,
+            votes: idea.votes
+          }))
+        );
       })
       .catch(next);
     logger.info(`GET "/ideas" response status 200`);
   })
   .post(bodyParser, (req, res) => {
-    const {
-      user_id,
-      project_title,
-      project_summary,
-      date_submitted,
-      status = "idea",
-      github = "",
-      votes = 0
-    } = req.body;
+    IdeasService.insertIdea(req.app.get("db"), newIdea);
 
-    if (!user_id) {
-      logger.error(`POST "/ideas" user_id missing in request body`);
-      return res.status(400).send("Invalid data");
-    }
+    // if (!user_id) {
+    //   logger.error(`POST "/ideas" user_id missing in request body`);
+    //   return res.status(400).send("Invalid data");
+    // }
 
     if (!project_title) {
       logger.error(`POST "/ideas" project_title missing in request body`);
@@ -45,7 +47,7 @@ ideasRouter
     const previousId = ideas.length === 0 ? 0 : ideas[ideas.length - 1].id;
     const id = parseInt(previousId) + 1;
 
-    const idea = {
+    const newIdea = {
       id,
       user_id,
       project_title,
@@ -56,28 +58,34 @@ ideasRouter
       votes
     };
 
-    ideas.push(idea);
+    IdeasService.insertIdea(req.app.get("db"), newIdea).then(() => {
+      res
+        .status(201)
+        .location(`http://localhost:8000/ideas/${id}`)
+        .json(idea);
+    });
 
     logger.info(`POST "/ideas" idea id=${id} created`);
-
-    res
-      .status(201)
-      .location(`http://localhost:8000/ideas/${id}`)
-      .json(idea);
   });
 
 ideasRouter
   .route("/ideas/:id")
-  .get((req, res) => {
-    const { id } = req.params;
-    const idea = ideas.find(idea => idea.id === id);
+  .get((req, res, next) => {
+    IdeasService.getById(req.app.get("db"), req.params.id)
+      .then(idea => {
+        if (!idea) {
+          logger.error(
+            `GET "/ideas/:id" id=${req.params.id} -> idea not found`
+          );
+          return res.status(404).json({
+            error: { message: "Idea not found" }
+          });
+        }
+        res.status(200).json(idea);
+      })
+      .catch(next);
 
-    if (!idea) {
-      logger.error(`GET "/ideas/:id" id=${id} -> idea not found`);
-      return res.status(404).send("Idea not found");
-    }
-    logger.info(`GET "/ideas/:id" - idea.id ${id} delivered`);
-    res.json(idea);
+    logger.info(`GET "/ideas/:id" -> idea id=${req.params.id} returned`);
   })
   .delete((req, res) => {
     const { id } = req.params;
