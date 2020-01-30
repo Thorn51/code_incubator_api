@@ -29,9 +29,9 @@ app.get("/", (req, res) => {
   logger.info(`GET "/" response status 200`);
 });
 
-app.use(ideasRouter);
-app.use(commentsRouter);
-app.use(usersRouter);
+app.use("/ideas", ideasRouter);
+app.use("/comments", commentsRouter);
+app.use("/users", usersRouter);
 
 app.use(function errorHandler(error, req, res, next) {
   let response;
