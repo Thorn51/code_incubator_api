@@ -1,0 +1,4 @@
+ALTER TABLE ideas
+    DROP COLUMN author;
+
+DROP TABLE IF EXISTS users; 
