@@ -65,11 +65,11 @@ describe("Ideas Endpoints", () => {
       });
       it("GET /api/ideas/:id returns the idea by id and status 200", () => {
         const queryId = 3;
-        const expectedArticle = testIdeas[queryId - 1];
+        const expectedIdea = testIdeas[queryId - 1];
         return supertest(app)
           .get(`/api/ideas/${queryId}`)
           .set("Authorization", "bearer " + process.env.API_TOKEN)
-          .expect(200, expectedArticle);
+          .expect(200, expectedIdea);
       });
     });
 
@@ -181,6 +181,89 @@ describe("Ideas Endpoints", () => {
               .get("/api/ideas")
               .set("Authorization", "bearer " + process.env.API_TOKEN)
               .expect(expectedIdeas)
+          );
+      });
+    });
+  });
+
+  describe.only("PATCH /api/ideas/:id", () => {
+    context("no data in ideas table", () => {
+      it("responds with status 404", () => {
+        const ideaId = 987654;
+        return supertest(app)
+          .patch(`/api/ideas${ideaId}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(404);
+      });
+    });
+
+    context("data in ideas table", () => {
+      const testIdeas = makeIdeasArray();
+
+      beforeEach("insert test data", () => {
+        return db.into("ideas").insert(testIdeas);
+      });
+
+      it("responds with status 204 and updates the idea", () => {
+        const idToUpdate = 2;
+        const updatedIdea = {
+          project_title: "Test Patch",
+          project_summary: "Testing the patch endpoint for editing ideas.",
+          status: "In-Development"
+        };
+        const expectedIdea = {
+          ...testIdeas[idToUpdate - 1],
+          ...updatedIdea
+        };
+        return supertest(app)
+          .patch(`/api/ideas/${idToUpdate}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(updatedIdea)
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get(`/api/ideas/${idToUpdate}`)
+              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .expect(expectedIdea)
+          );
+      });
+
+      it("responds with status 400 when no required fields are supplied", () => {
+        const idToUpdate = 2;
+        return supertest(app)
+          .patch(`/api/ideas/${idToUpdate}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send({ irrelevantField: "No Field Exists" })
+          .expect(400, {
+            error: {
+              message:
+                "Request body must contain project_title, project_summary, or status"
+            }
+          });
+      });
+
+      it("responds with status 204 when updating only a subset of fields", () => {
+        const idToUpdate = 2;
+        const updateIdea = {
+          project_title: "Test Patch on Title Only"
+        };
+        const expectedIdea = {
+          ...testIdeas[idToUpdate - 1],
+          ...updateIdea
+        };
+        return supertest(app)
+          .patch(`/api/ideas/${idToUpdate}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send({
+            ...updateIdea,
+            fieldToIgnore: "Should not be in GET response"
+          })
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get(`/api/ideas/${idToUpdate}`)
+              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .expect(expectedIdea)
           );
       });
     });
