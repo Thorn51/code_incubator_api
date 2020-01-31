@@ -1,9 +1,20 @@
 const express = require("express");
 const logger = require("../logger");
 const IdeasService = require("./ideas-service");
+const xss = require("xss");
 
 const ideasRouter = express.Router();
 const bodyParser = express.json();
+
+const serializeIdea = idea => ({
+  id: idea.id,
+  project_title: xss(idea.project_title),
+  project_summary: xss(idea.project_summary),
+  date_submitted: idea.date_submitted,
+  github: xss(idea.github),
+  votes: idea.votes,
+  status: idea.status
+});
 
 ideasRouter
   .route("/")
@@ -36,9 +47,9 @@ ideasRouter
     } = req.body;
 
     const newIdea = {
-      project_title,
-      project_summary,
-      github,
+      project_title: xss(project_title),
+      project_summary: xss(project_summary),
+      github: xss(github),
       status,
       votes
     };
@@ -74,7 +85,7 @@ ideasRouter
         res
           .status(201)
           .location(`/ideas/${idea.id}`)
-          .json(idea);
+          .json(serializeIdea(idea));
         logger.info(`POST "/ideas" idea id=${idea.id} created`);
       })
       .catch(next);
@@ -82,7 +93,7 @@ ideasRouter
 
 ideasRouter
   .route("/:id")
-  .get((req, res, next) => {
+  .all((req, res, next) => {
     IdeasService.getById(req.app.get("db"), req.params.id)
       .then(idea => {
         if (!idea) {
@@ -90,25 +101,25 @@ ideasRouter
             `GET "/ideas/:id" id=${req.params.id} -> idea not found`
           );
           return res.status(404).json({
-            error: { message: "Idea not found" }
+            error: { message: "Idea doesn't exist" }
           });
         }
-        res.status(200).json(idea);
+        res.idea = idea;
+        next();
       })
       .catch(next);
-
+  })
+  .get((req, res, next) => {
+    res.status(200).json(serializeIdea(res.idea));
     logger.info(`GET "/ideas/:id" -> idea id=${req.params.id} returned`);
   })
-  .delete((req, res) => {
+  .delete((req, res, next) => {
     const { id } = req.params;
-    const ideaIndex = ideas.findIndex(idea => idea.id === id);
 
-    if (ideaIndex === -1) {
-      logger.error(`DELETE "/ideas/:id" comment id=${id} not found`);
-      return res.status(404).send("Not Found");
-    }
-    res.status(204).end();
-    logger.info(`DELETE "/ideas/:id" -> idea with id ${id} deleted`);
+    IdeasService.deleteIdea(req.app.get("db"), id).then(() => {
+      res.status(204).end();
+      logger.info(`DELETE "/ideas/:id" -> idea with id ${id} deleted`);
+    });
   });
 
 module.exports = ideasRouter;
