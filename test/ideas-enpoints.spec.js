@@ -3,7 +3,7 @@ const knex = require("knex");
 const app = require("../src/app");
 const { makeIdeasArray, makeXssIdea } = require("./fixtures");
 
-describe.only("Ideas Endpoints", () => {
+describe("Ideas Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -20,11 +20,11 @@ describe.only("Ideas Endpoints", () => {
 
   afterEach("Remove data after each test", () => db("ideas").truncate());
 
-  describe("GET /ideas", () => {
+  describe("GET /api/ideas", () => {
     context("No data in ideas table", () => {
-      it("Returns an empty array and status ", () => {
+      it("Returns an empty array and status 200", () => {
         return supertest(app)
-          .get("/ideas")
+          .get("/api/ideas")
           .set("Authorization", "bearer " + process.env.API_TOKEN)
           .expect(200, []);
       });
@@ -37,23 +37,23 @@ describe.only("Ideas Endpoints", () => {
         return db("ideas").insert(testIdeas);
       });
 
-      it(`GET /ideas responds with status 200 and all of the ideas`, () => {
+      it(`GET /api/ideas responds with status 200 and all of the ideas`, () => {
         return supertest(app)
-          .get("/ideas")
+          .get("/api/ideas")
           .set("Authorization", "bearer " + process.env.API_TOKEN)
           .expect(200, testIdeas);
       });
     });
   });
 
-  describe.only("GET /ideas/:id", () => {
+  describe("GET /api/ideas/:id", () => {
     context("No data in ideas table", () => {
       it("Responds with error 404", () => {
         const noIdeaId = 200;
         return supertest(app)
-          .get(`/ideas/${noIdeaId}`)
+          .get(`/api/ideas/${noIdeaId}`)
           .set("Authorization", "bearer " + process.env.API_TOKEN)
-          .expect(404, { error: { message: "Idea not found" } });
+          .expect(404, { error: { message: "Idea doesn't exist" } });
       });
     });
 
@@ -63,11 +63,11 @@ describe.only("Ideas Endpoints", () => {
       beforeEach("Insert test data", () => {
         return db("ideas").insert(testIdeas);
       });
-      it("GET /ideas/:id returns the idea by id and status 200", () => {
+      it("GET /api/ideas/:id returns the idea by id and status 200", () => {
         const queryId = 3;
         const expectedArticle = testIdeas[queryId - 1];
         return supertest(app)
-          .get(`/ideas/${queryId}`)
+          .get(`/api/ideas/${queryId}`)
           .set("Authorization", "bearer " + process.env.API_TOKEN)
           .expect(200, expectedArticle);
       });
@@ -82,7 +82,7 @@ describe.only("Ideas Endpoints", () => {
 
       it("removes XSS content", () => {
         return supertest(app)
-          .get(`/ideas/${xssIdea[0].id}`)
+          .get(`/api/ideas/${xssIdea[0].id}`)
           .set("Authorization", "bearer " + process.env.API_TOKEN)
           .expect(200)
           .expect(res => {
@@ -97,14 +97,14 @@ describe.only("Ideas Endpoints", () => {
     });
   });
 
-  describe("POST /ideas", () => {
+  describe("POST /api/ideas", () => {
     it("Responds with status 201, return new idea, and inserts new idea into database", () => {
       const newIdea = {
         project_title: "Test Post Endpoint",
         project_summary: "Testing if the ideas endpoint will successfully post"
       };
       return supertest(app)
-        .post("/ideas")
+        .post("/api/ideas")
         .set("Authorization", "bearer " + process.env.API_TOKEN)
         .send(newIdea)
         .expect(201)
@@ -116,11 +116,11 @@ describe.only("Ideas Endpoints", () => {
           expect(res.body).to.have.property("date_submitted");
           expect(res.body).to.have.property("status");
           expect(res.body).to.have.property("votes");
-          expect(res.headers.location).to.eql(`/ideas/${res.body.id}`);
+          expect(res.headers.location).to.eql(`/api/ideas/${res.body.id}`);
         })
         .then(postRes =>
           supertest(app)
-            .get(`/ideas/${postRes.body.id}`)
+            .get(`/api/ideas/${postRes.body.id}`)
             .set("Authorization", "bearer " + process.env.API_TOKEN)
             .expect(postRes.body)
         );
@@ -139,12 +139,49 @@ describe.only("Ideas Endpoints", () => {
         delete newIdea[field];
 
         return supertest(app)
-          .post("/ideas")
+          .post("/api/ideas")
           .set("Authorization", "bearer " + process.env.API_TOKEN)
           .send(newIdea)
           .expect(400, {
             error: { message: `Missing '${field}' in request body.` }
           });
+      });
+    });
+  });
+
+  describe("DELETE /api/ideas/:id", () => {
+    context("no data in the ideas table", () => {
+      it("responds with status 404", () => {
+        const ideaId = 987654;
+        return supertest(app)
+          .delete(`/api/ideas/${ideaId}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(404, { error: { message: `Idea doesn't exist` } });
+      });
+    });
+
+    context("data in the ideas table", () => {
+      const testIdeas = makeIdeasArray();
+
+      beforeEach("insert test data", () => {
+        return db.into("ideas").insert(testIdeas);
+      });
+
+      it("responds with status 204 and removes the idea", () => {
+        const ideaIdToRemove = 3;
+        const expectedIdeas = testIdeas.filter(
+          idea => idea.id !== ideaIdToRemove
+        );
+        return supertest(app)
+          .delete(`/api/ideas/${ideaIdToRemove}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get("/api/ideas")
+              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .expect(expectedIdeas)
+          );
       });
     });
   });
