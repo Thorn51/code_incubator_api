@@ -29,7 +29,7 @@ app.get("/", (req, res) => {
   logger.info(`GET "/" response status 200`);
 });
 
-app.use("/ideas", ideasRouter);
+app.use("/api/ideas", ideasRouter);
 app.use("/comments", commentsRouter);
 app.use("/users", usersRouter);
 
