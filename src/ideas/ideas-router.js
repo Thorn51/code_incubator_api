@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const logger = require("../logger");
 const IdeasService = require("./ideas-service");
 const xss = require("xss");
@@ -35,7 +36,7 @@ ideasRouter
         );
       })
       .catch(next);
-    logger.info(`GET "/ideas" response status 200`);
+    logger.info(`GET "/api/ideas" response status 200`);
   })
   .post(bodyParser, (req, res, next) => {
     const {
@@ -54,19 +55,19 @@ ideasRouter
       votes
     };
     // if (!user_id) {
-    //   logger.error(`POST "/ideas" user_id missing in request body`);
+    //   logger.error(`POST "/api/ideas" user_id missing in request body`);
     //   return res.status(400).send("Invalid data");
     // }console.log(req.body);
 
     if (!project_title) {
-      logger.error(`POST "/ideas" project_title missing in request body`);
+      logger.error(`POST "/api/ideas" project_title missing in request body`);
       return res.status(400).json({
         error: { message: `Missing 'project_title' in request body.` }
       });
     }
 
     if (!project_summary) {
-      logger.error(`POST "/ideas" project_summary missing in request body`);
+      logger.error(`POST "/api/ideas" project_summary missing in request body`);
       return res.status(400).json({
         error: { message: `Missing 'project_summary' in request body.` }
       });
@@ -84,9 +85,9 @@ ideasRouter
       .then(idea => {
         res
           .status(201)
-          .location(`/ideas/${idea.id}`)
+          .location(path.posix.join(req.originalUrl, `/${idea.id}`))
           .json(serializeIdea(idea));
-        logger.info(`POST "/ideas" idea id=${idea.id} created`);
+        logger.info(`POST "/api/ideas" idea id=${idea.id} created`);
       })
       .catch(next);
   });
@@ -98,7 +99,7 @@ ideasRouter
       .then(idea => {
         if (!idea) {
           logger.error(
-            `GET "/ideas/:id" id=${req.params.id} -> idea not found`
+            `GET "/api/ideas/:id" id=${req.params.id} -> idea not found`
           );
           return res.status(404).json({
             error: { message: "Idea doesn't exist" }
@@ -111,15 +112,41 @@ ideasRouter
   })
   .get((req, res, next) => {
     res.status(200).json(serializeIdea(res.idea));
-    logger.info(`GET "/ideas/:id" -> idea id=${req.params.id} returned`);
+    logger.info(`GET "/api/ideas/:id" -> idea id=${req.params.id} returned`);
   })
   .delete((req, res, next) => {
     const { id } = req.params;
 
     IdeasService.deleteIdea(req.app.get("db"), id).then(() => {
       res.status(204).end();
-      logger.info(`DELETE "/ideas/:id" -> idea with id ${id} deleted`);
+      logger.info(`DELETE "/api/ideas/:id" -> idea with id ${id} deleted`);
     });
+  })
+  .patch(bodyParser, (req, res, next) => {
+    const { project_title, project_summary, status } = req.body;
+    const ideaUpdate = { project_title, project_summary, status };
+
+    const numberOfValues = Object.values(ideaUpdate).filter(Boolean).length;
+
+    if (numberOfValues === 0) {
+      logger.error(
+        `PATCH "/api/ideas/:id" -> request to edit did not contain relevant fields`
+      );
+      return res.status(400).json({
+        error: {
+          message:
+            "Request body must contain project_title, project_summary, or status"
+        }
+      });
+    }
+
+    IdeasService.updateIdea(req.app.get("db"), req.params.id, ideaUpdate)
+      .then(numRowsAffected => {
+        res.status(204).end();
+      })
+      .catch(next);
+
+    logger.info(`PATCH "/api/ideas/:id" -> idea id ${req.params.id} edited`);
   });
 
 module.exports = ideasRouter;
