@@ -28,7 +28,7 @@ ideasRouter
             id: idea.id,
             project_title: idea.project_title,
             project_summary: idea.project_summary,
-            date_submitted: new Date(idea.date_submitted),
+            date_submitted: idea.date_submitted,
             status: idea.status,
             github: idea.github,
             votes: idea.votes
