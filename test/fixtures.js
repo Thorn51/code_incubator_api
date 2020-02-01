@@ -123,7 +123,7 @@ function makeComments() {
       project_id: "3",
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
+      date_submitted: "2020-12-21T07:00:00.000Z",
       votes: "6"
     },
     {
@@ -132,7 +132,7 @@ function makeComments() {
       project_id: "3",
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
+      date_submitted: "2020-12-21T07:00:00.000Z",
       votes: "12"
     },
     {
@@ -141,7 +141,7 @@ function makeComments() {
       project_id: "4",
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
+      date_submitted: "2020-12-21T07:00:00.000Z",
       votes: "1"
     },
     {
@@ -150,7 +150,7 @@ function makeComments() {
       project_id: "4",
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
+      date_submitted: "2020-12-21T07:00:00.000Z",
       votes: "16"
     },
     {
@@ -168,42 +168,46 @@ function makeComments() {
 function makeUsersArray() {
   return [
     {
-      id: "1",
+      id: 1,
       first_name: "John",
       last_name: "Doe",
       email: "jdoe@devevlopmenttesting.com",
       password: "notRealForDev!1",
       nickname: "code_guru",
-      votes: "77"
+      votes: "77",
+      date_created: "2020-12-21T07:00:00.000Z"
     },
     {
-      id: "2",
-      first_name: "John",
+      id: 2,
+      first_name: "Luke",
       last_name: "Doe",
-      email: "jdoe@devevlopmenttesting.com",
+      email: "ldoe@devevlopmenttesting.com",
       password: "notRealForDev1!",
       nickname: "react_champ",
-      votes: "35"
+      votes: "35",
+      date_created: "2020-12-21T07:00:00.000Z"
     },
     {
-      id: "3",
-      first_name: "John",
+      id: 3,
+      first_name: "Bob",
       last_name: "Doe",
-      email: "jdoe@devevlopmenttesting.com",
+      email: "bdoe@devevlopmenttesting.com",
       password: "notRealForDev1!",
       nickname: "jquery_king",
-      votes: "20"
+      votes: "20",
+      date_created: "2020-12-21T07:00:00.000Z"
     },
     {
-      id: "4",
-      first_name: "John",
+      id: 4,
+      first_name: "Steve",
       last_name: "Doe",
-      email: "jdoe@devevlopmenttesting.com",
+      email: "sdoe@devevlopmenttesting.com",
       password: "notRealForDev1!",
       nickname: "css_aficianado",
-      votes: "15"
+      votes: "15",
+      date_created: "2020-12-21T07:00:00.000Z"
     }
   ];
 }
 
-module.exports = { makeIdeasArray, makeXssIdea, makeComments };
+module.exports = { makeIdeasArray, makeXssIdea, makeComments, makeUsersArray };
