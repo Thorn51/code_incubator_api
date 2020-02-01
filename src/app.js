@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/ideas", ideasRouter);
 app.use("/comments", commentsRouter);
-app.use("/users", usersRouter);
+app.use("/api/users", usersRouter);
 
 app.use(function errorHandler(error, req, res, next) {
   let response;
