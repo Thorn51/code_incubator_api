@@ -1,28 +1,83 @@
 const express = require("express");
+const path = require("path");
 const logger = require("../logger");
+const UsersService = require("./users-service");
+const xss = require("xss");
 
 const usersRouter = express.Router();
 const bodyParser = express.json();
 
-const users = [
-  {
-    id: "1",
-    first_name: "John",
-    last_name: "Doe",
-    email: "jdoe@devevlopmenttesting.com",
-    password: "notRealForDev!1",
-    nickname: "code_guru",
-    votes: "77"
-  }
-];
-
-usersRouter.route("users").get((req, res) => {
-  res.status(200).json(users);
-  logger.info(`GET "/users" response status 200`);
+const serializeUser = user => ({
+  id: user.id,
+  first_name: xss(user.first_name),
+  last_name: xss(user.last_name),
+  email: xss(user.email),
+  password: xss(user.password),
+  nickname: xss(user.nickname),
+  votes: user.votes,
+  date_created: user.date_created
 });
 
 usersRouter
-  .route("/users/:id")
+  .route("/")
+  .get((req, res, next) => {
+    UsersService.getAllUsers(req.app.get("db"))
+      .then(users => {
+        res.status(200).json(
+          users.map(user => ({
+            id: user.id,
+            first_name: xss(user.first_name),
+            last_name: xss(user.last_name),
+            email: xss(user.email),
+            password: xss(user.password),
+            nickname: xss(user.nickname),
+            votes: user.votes,
+            date_created: user.date_created
+          }))
+        );
+      })
+      .catch(next);
+    logger.info(`GET "/users" response status 200`);
+  })
+  .post(bodyParser, (req, res, next) => {
+    const {
+      first_name,
+      last_name,
+      email,
+      password,
+      nickname,
+      votes = 0
+    } = req.body;
+
+    const newUser = {
+      first_name: xss(first_name),
+      last_name: xss(last_name),
+      email: xss(email),
+      password: xss(password),
+      nickname: xss(nickname),
+      votes
+    };
+
+    for (const [key, value] of Object.entries(newUser)) {
+      if (value === null) {
+        logger.error(`POST /api/users -> Missing ${key} in the request body`);
+        return res.status(400).json({
+          error: { message: `Missing ${key} in the request body` }
+        });
+      }
+    }
+
+    UsersService.insertUser(req.app.get("db"), newUser).then(user => {
+      logger.info(`POST /api/users -> user id=${user.id} created`);
+      res
+        .status(201)
+        .location(path.posix.join(req.originalUrl, `/${user.id}`))
+        .json(serializeUser(user));
+    });
+  });
+
+usersRouter
+  .route("/:id")
   .get((req, res) => {
     const { id } = req.params;
     const user = users.find(user => user.id === id);
@@ -92,7 +147,7 @@ usersRouter.route("/users/registration").post(bodyParser, (req, res) => {
 
   res
     .status(201)
-    .location(`http://localhost:8000/ideas/${id}`)
+    .location(path.posix.join(req.originalUrl, `/${newUser.id}`))
     .json(newUser);
 });
 
