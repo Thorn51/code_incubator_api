@@ -186,7 +186,7 @@ describe("Ideas Endpoints", () => {
     });
   });
 
-  describe.only("PATCH /api/ideas/:id", () => {
+  describe("PATCH /api/ideas/:id", () => {
     context("no data in ideas table", () => {
       it("responds with status 404", () => {
         const ideaId = 987654;
@@ -242,10 +242,10 @@ describe("Ideas Endpoints", () => {
           });
       });
 
-      it("responds with status 204 when updating only a subset of fields", () => {
+      it("responds with status 204 when updating a subset of fields", () => {
         const idToUpdate = 2;
         const updateIdea = {
-          project_title: "Test Patch on Title Only"
+          project_title: "Test Patch on Title"
         };
         const expectedIdea = {
           ...testIdeas[idToUpdate - 1],
