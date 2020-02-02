@@ -47,51 +47,6 @@ function makeIdeasArray() {
   ];
 }
 
-function makeXssIdea() {
-  return [
-    {
-      id: 1,
-      project_title: '<script>alert("xss");</script>',
-      project_summary:
-        '<img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.',
-      date_submitted: "2020-01-30T07:00:00.000Z",
-      status: "Idea",
-      github: "",
-      votes: 0,
-      author: 2
-    }
-  ];
-}
-
-function makeXssUser() {
-  return [
-    {
-      id: 1,
-      first_name: '<script>alert("xss");</script>',
-      last_name:
-        '<img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.',
-      email: '<script>alert("xss");</script>',
-      password: '<script>alert("xss");</script>',
-      nickname: '<script>alert("xss");</script>',
-      date_created: "2020-01-30T07:00:00.000Z",
-      votes: 0,
-      date_created: "2020-01-30T07:00:00.000Z"
-    }
-  ];
-}
-function makeXssComment() {
-  return [
-    {
-      id: 1,
-      comment_text: '<script>alert("xss");</script>',
-      votes: 0,
-      date_submitted: "2020-01-30T07:00:00.000Z",
-      author: 2,
-      project: 1
-    }
-  ];
-}
-
 function makeCommentsArray() {
   return [
     {
@@ -246,6 +201,52 @@ function makeUsersArray() {
       nickname: "css_aficianado",
       votes: "15",
       date_created: "2020-12-21T07:00:00.000Z"
+    }
+  ];
+}
+
+function makeXssIdea() {
+  return [
+    {
+      id: 1,
+      project_title: '<script>alert("xss");</script>',
+      project_summary:
+        '<img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.',
+      date_submitted: "2020-01-30T07:00:00.000Z",
+      status: "Idea",
+      github: "",
+      votes: 0,
+      author: 2
+    }
+  ];
+}
+
+function makeXssUser() {
+  return [
+    {
+      id: 1,
+      first_name: '<script>alert("xss");</script>',
+      last_name:
+        '<img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.',
+      email: '<script>alert("xss");</script>',
+      password: '<script>alert("xss");</script>',
+      nickname: '<script>alert("xss");</script>',
+      date_created: "2020-01-30T07:00:00.000Z",
+      votes: 0,
+      date_created: "2020-01-30T07:00:00.000Z"
+    }
+  ];
+}
+
+function makeXssComment() {
+  return [
+    {
+      id: 1,
+      comment_text: '<script>alert("xss");</script>',
+      votes: 0,
+      date_submitted: "2020-01-30T07:00:00.000Z",
+      author: 2,
+      project: 1
     }
   ];
 }
