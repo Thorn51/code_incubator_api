@@ -1,9 +1,9 @@
 const { expect } = require("chai");
 const knex = require("knex");
 const app = require("../src/app");
-const { makeUsersArray } = require("./fixtures");
+const { makeUsersArray, makeXssUser } = require("./fixtures");
 
-describe("Users Endpoints", () => {
+describe.only("Users Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -17,13 +17,13 @@ describe("Users Endpoints", () => {
   after("Disconnect from test database", () => db.destroy());
 
   before("Clean table", () =>
-    db.raw(`TRUNCATE ideas, users, comments RESTART IDENTITY CASCADE`)
+    db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
   );
   afterEach("Remove data after each test", () =>
-    db.raw(`TRUNCATE ideas, users, comments RESTART IDENTITY CASCADE`)
+    db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
   );
 
-  describe.only("GET /api/users", () => {
+  describe("GET /api/users", () => {
     context("No data in users table", () => {
       it("Returns an empty array and status 200", () => {
         return supertest(app)
@@ -49,226 +49,248 @@ describe("Users Endpoints", () => {
     });
   });
 
-  //   describe("GET /api/ideas/:id", () => {
-  //     context("No data in ideas table", () => {
-  //       it("Responds with error 404", () => {
-  //         const noIdeaId = 200;
-  //         return supertest(app)
-  //           .get(`/api/ideas/${noIdeaId}`)
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .expect(404, { error: { message: "Idea doesn't exist" } });
-  //       });
-  //     });
+  describe("GET /api/users/:id", () => {
+    context("No data in users table", () => {
+      it("Responds with error 404", () => {
+        const noUserId = 200;
+        return supertest(app)
+          .get(`/api/users/${noUserId}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(404, { error: { message: "User doesn't exist" } });
+      });
+    });
 
-  //     context("Data in the ideas table", () => {
-  //       const testIdeas = makeIdeasArray();
+    context("Data in the users table", () => {
+      const testUsers = makeUsersArray();
 
-  //       beforeEach("Insert test data", () => {
-  //         return db("ideas").insert(testIdeas);
-  //       });
-  //       it("GET /api/ideas/:id returns the idea by id and status 200", () => {
-  //         const queryId = 3;
-  //         const expectedIdea = testIdeas[queryId - 1];
-  //         return supertest(app)
-  //           .get(`/api/ideas/${queryId}`)
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .expect(200, expectedIdea);
-  //       });
-  //     });
+      beforeEach("Insert test data", () => {
+        return db("users").insert(testUsers);
+      });
+      it("GET /api/users/:id returns the user by id and status 200", () => {
+        const queryId = 3;
+        const expectedUser = testUsers[queryId - 1];
+        return supertest(app)
+          .get(`/api/users/${queryId}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(200, expectedUser);
+      });
+    });
 
-  //     context("Given an XSS attack idea", () => {
-  //       const xssIdea = makeXssIdea();
+    context("Given an XSS attack user", () => {
+      const xssUser = makeXssUser();
 
-  //       beforeEach("insert malicious article", () => {
-  //         return db.into("ideas").insert(xssIdea);
-  //       });
+      beforeEach("insert malicious user", () => {
+        return db.into("users").insert(xssUser);
+      });
 
-  //       it("removes XSS content", () => {
-  //         return supertest(app)
-  //           .get(`/api/ideas/${xssIdea[0].id}`)
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .expect(200)
-  //           .expect(res => {
-  //             expect(res.body.project_title).to.eql(
-  //               '&lt;script&gt;alert("xss");&lt;/script&gt;'
-  //             );
-  //             expect(res.body.project_summary).to.eql(
-  //               '<img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.'
-  //             );
-  //           });
-  //       });
-  //     });
-  //   });
+      it("removes XSS content", () => {
+        return supertest(app)
+          .get(`/api/users/${xssUser[0].id}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(200)
+          .expect(res => {
+            expect(res.body.first_name).to.eql(
+              '&lt;script&gt;alert("xss");&lt;/script&gt;'
+            );
+            expect(res.body.last_name).to.eql(
+              '<img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.'
+            );
+            expect(res.body.email).to.eql(
+              '&lt;script&gt;alert("xss");&lt;/script&gt;'
+            );
+            expect(res.body.password).to.eql(
+              '&lt;script&gt;alert("xss");&lt;/script&gt;'
+            );
+            expect(res.body.nickname).to.eql(
+              '&lt;script&gt;alert("xss");&lt;/script&gt;'
+            );
+          });
+      });
+    });
+  });
 
-  //   describe("POST /api/ideas", () => {
-  //     it("Responds with status 201, return new idea, and inserts new idea into database", () => {
-  //       const newIdea = {
-  //         project_title: "Test Post Endpoint",
-  //         project_summary: "Testing if the ideas endpoint will successfully post"
-  //       };
-  //       return supertest(app)
-  //         .post("/api/ideas")
-  //         .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //         .send(newIdea)
-  //         .expect(201)
-  //         .expect(res => {
-  //           expect(res.body.project_title).to.eql(newIdea.project_title);
-  //           expect(res.body.project_summary).to.eql(newIdea.project_summary);
-  //           expect(res.body).to.have.property("id");
-  //           expect(res.body).to.have.property("votes");
-  //           expect(res.body).to.have.property("date_submitted");
-  //           expect(res.body).to.have.property("status");
-  //           expect(res.body).to.have.property("votes");
-  //           expect(res.headers.location).to.eql(`/api/ideas/${res.body.id}`);
-  //         })
-  //         .then(postRes =>
-  //           supertest(app)
-  //             .get(`/api/ideas/${postRes.body.id}`)
-  //             .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //             .expect(postRes.body)
-  //         );
-  //     });
+  describe("POST /api/users", () => {
+    it("Responds with status 201, return new user, and inserts new user into database", () => {
+      const newUser = {
+        first_name: "Test",
+        last_name: "Post",
+        email: "test.post@testing.com",
+        password: "testyPost1!",
+        nickname: "ElPosterOfTestiness1!"
+      };
+      return supertest(app)
+        .post("/api/users")
+        .set("Authorization", "bearer " + process.env.API_TOKEN)
+        .send(newUser)
+        .expect(201)
+        .expect(res => {
+          expect(res.body.first_name).to.eql(newUser.first_name);
+          expect(res.body.last_name).to.eql(newUser.last_name);
+          expect(res.body.email).to.eql(newUser.email);
+          expect(res.body.password).to.eql(newUser.password);
+          expect(res.body.nickname).to.eql(newUser.nickname);
+          expect(res.body).to.have.property("id");
+          expect(res.body).to.have.property("votes");
+          expect(res.body).to.have.property("date_created");
+          expect(res.headers.location).to.eql(`/api/users/${res.body.id}`);
+        })
+        .then(postRes =>
+          supertest(app)
+            .get(`/api/users/${postRes.body.id}`)
+            .set("Authorization", "bearer " + process.env.API_TOKEN)
+            .expect(postRes.body)
+        );
+    });
 
-  //     const requiredFields = ["project_title", "project_summary"];
+    const requiredFields = [
+      "first_name",
+      "last_name",
+      "email",
+      "password",
+      "nickname"
+    ];
 
-  //     requiredFields.forEach(field => {
-  //       const newIdea = {
-  //         project_title: "Test Idea Post",
-  //         project_summary:
-  //           "Test that the validation checks are working properly to ensure required fields are submitted."
-  //       };
+    requiredFields.forEach(field => {
+      const newUser = {
+        first_name: "Test",
+        last_name: "Post",
+        email: "test.post@testing.com",
+        password: "testyPost1!",
+        nickname: "ElPosterOfTestiness1!"
+      };
 
-  //       it(`responds with status 400 when '${field}' is missing from request body`, () => {
-  //         delete newIdea[field];
+      it(`responds with status 400 when '${field}' is missing from request body`, () => {
+        delete newUser[field];
 
-  //         return supertest(app)
-  //           .post("/api/ideas")
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .send(newIdea)
-  //           .expect(400, {
-  //             error: { message: `Missing '${field}' in request body.` }
-  //           });
-  //       });
-  //     });
-  //   });
+        return supertest(app)
+          .post("/api/users")
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(newUser)
+          .expect(400, {
+            error: { message: `Missing '${field}' in the request body` }
+          });
+      });
+    });
+  });
 
-  //   describe("DELETE /api/ideas/:id", () => {
-  //     context("no data in the ideas table", () => {
-  //       it("responds with status 404", () => {
-  //         const ideaId = 987654;
-  //         return supertest(app)
-  //           .delete(`/api/ideas/${ideaId}`)
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .expect(404, { error: { message: `Idea doesn't exist` } });
-  //       });
-  //     });
+  describe("DELETE /api/users/:id", () => {
+    context("no data in the users table", () => {
+      it("responds with status 404", () => {
+        const userId = 987654;
+        return supertest(app)
+          .delete(`/api/users/${userId}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(404, { error: { message: `User doesn't exist` } });
+      });
+    });
 
-  //     context("data in the ideas table", () => {
-  //       const testIdeas = makeIdeasArray();
+    context("data in the users table", () => {
+      const testUsers = makeUsersArray();
 
-  //       beforeEach("insert test data", () => {
-  //         return db.into("ideas").insert(testIdeas);
-  //       });
+      beforeEach("insert test data", () => {
+        return db.into("users").insert(testUsers);
+      });
 
-  //       it("responds with status 204 and removes the idea", () => {
-  //         const ideaIdToRemove = 3;
-  //         const expectedIdeas = testIdeas.filter(
-  //           idea => idea.id !== ideaIdToRemove
-  //         );
-  //         return supertest(app)
-  //           .delete(`/api/ideas/${ideaIdToRemove}`)
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .expect(204)
-  //           .then(res =>
-  //             supertest(app)
-  //               .get("/api/ideas")
-  //               .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //               .expect(expectedIdeas)
-  //           );
-  //       });
-  //     });
-  //   });
+      it("responds with status 204 and removes the user", () => {
+        const userIdToRemove = 3;
+        const expectedUsers = testUsers.filter(
+          user => user.id !== userIdToRemove
+        );
+        return supertest(app)
+          .delete(`/api/users/${userIdToRemove}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get("/api/users")
+              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .expect(expectedUsers)
+          );
+      });
+    });
+  });
 
-  //   describe("PATCH /api/ideas/:id", () => {
-  //     context("no data in ideas table", () => {
-  //       it("responds with status 404", () => {
-  //         const ideaId = 987654;
-  //         return supertest(app)
-  //           .patch(`/api/ideas${ideaId}`)
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .expect(404);
-  //       });
-  //     });
+  describe("PATCH /api/users/:id", () => {
+    context("no data in users table", () => {
+      it("responds with status 404", () => {
+        const userId = 987654;
+        return supertest(app)
+          .patch(`/api/users${userId}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .expect(404);
+      });
+    });
 
-  //     context("data in ideas table", () => {
-  //       const testIdeas = makeIdeasArray();
+    context("data in users table", () => {
+      const testUsers = makeUsersArray();
 
-  //       beforeEach("insert test data", () => {
-  //         return db.into("ideas").insert(testIdeas);
-  //       });
+      beforeEach("insert test data", () => {
+        return db.into("users").insert(testUsers);
+      });
 
-  //       it("responds with status 204 and updates the idea", () => {
-  //         const idToUpdate = 2;
-  //         const updatedIdea = {
-  //           project_title: "Test Patch",
-  //           project_summary: "Testing the patch endpoint for editing ideas.",
-  //           status: "In-Development"
-  //         };
-  //         const expectedIdea = {
-  //           ...testIdeas[idToUpdate - 1],
-  //           ...updatedIdea
-  //         };
-  //         return supertest(app)
-  //           .patch(`/api/ideas/${idToUpdate}`)
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .send(updatedIdea)
-  //           .expect(204)
-  //           .then(res =>
-  //             supertest(app)
-  //               .get(`/api/ideas/${idToUpdate}`)
-  //               .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //               .expect(expectedIdea)
-  //           );
-  //       });
+      it("responds with status 204 and updates the user", () => {
+        const idToUpdate = 2;
+        const updatedUser = {
+          first_name: "Test",
+          last_name: "Patch",
+          email: "test.patch@patchtesting.com",
+          nickname: "testyPatch"
+        };
+        const expectedUser = {
+          ...testUsers[idToUpdate - 1],
+          ...updatedUser
+        };
+        return supertest(app)
+          .patch(`/api/users/${idToUpdate}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(updatedUser)
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get(`/api/users/${idToUpdate}`)
+              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .expect(expectedUser)
+          );
+      });
 
-  //       it("responds with status 400 when no required fields are supplied", () => {
-  //         const idToUpdate = 2;
-  //         return supertest(app)
-  //           .patch(`/api/ideas/${idToUpdate}`)
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .send({ irrelevantField: "No Field Exists" })
-  //           .expect(400, {
-  //             error: {
-  //               message:
-  //                 "Request body must contain project_title, project_summary, or status"
-  //             }
-  //           });
-  //       });
+      it("responds with status 400 when no required fields are supplied", () => {
+        const idToUpdate = 2;
+        return supertest(app)
+          .patch(`/api/users/${idToUpdate}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send({ irrelevantField: "No Field Exists" })
+          .expect(400, {
+            error: {
+              message:
+                "Request body must contain first_name, last_name, email, nickname, and or password"
+            }
+          });
+      });
 
-  //       it("responds with status 204 when updating only a subset of fields", () => {
-  //         const idToUpdate = 2;
-  //         const updateIdea = {
-  //           project_title: "Test Patch on Title Only"
-  //         };
-  //         const expectedIdea = {
-  //           ...testIdeas[idToUpdate - 1],
-  //           ...updateIdea
-  //         };
-  //         return supertest(app)
-  //           .patch(`/api/ideas/${idToUpdate}`)
-  //           .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //           .send({
-  //             ...updateIdea,
-  //             fieldToIgnore: "Should not be in GET response"
-  //           })
-  //           .expect(204)
-  //           .then(res =>
-  //             supertest(app)
-  //               .get(`/api/ideas/${idToUpdate}`)
-  //               .set("Authorization", "bearer " + process.env.API_TOKEN)
-  //               .expect(expectedIdea)
-  //           );
-  //       });
-  //     });
-  //   });
+      it("responds with status 204 when updating subset of fields", () => {
+        const idToUpdate = 2;
+        const updatedUser = {
+          first_name: "Testy"
+        };
+        const expectedUser = {
+          ...testUsers[idToUpdate - 1],
+          ...updatedUser
+        };
+        return supertest(app)
+          .patch(`/api/users/${idToUpdate}`)
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send({
+            ...updatedUser,
+            fieldToIgnore: "Should not be in GET response"
+          })
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get(`/api/users/${idToUpdate}`)
+              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .expect(expectedUser)
+          );
+      });
+    });
+  });
 });
