@@ -8,7 +8,7 @@ const {
   makeIdeasArray
 } = require("./fixtures");
 
-describe("Comments Endpoints", () => {
+describe.only("Comments Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -29,7 +29,7 @@ describe("Comments Endpoints", () => {
     db.raw("TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE")
   );
 
-  describe.only("GET /api/comments", () => {
+  describe("GET /api/comments", () => {
     context("No data in comments table", () => {
       it("Returns an empty array and status 200", () => {
         return supertest(app)
@@ -78,6 +78,8 @@ describe("Comments Endpoints", () => {
     });
 
     context("Data in the comments table", () => {
+      const testUsers = makeUsersArray();
+      const testIdeas = makeIdeasArray();
       const testComments = makeCommentsArray();
 
       beforeEach("Insert test data", () => {
@@ -104,6 +106,8 @@ describe("Comments Endpoints", () => {
     });
 
     context("Given an XSS attack comment", () => {
+      const testUsers = makeUsersArray();
+      const testIdeas = makeIdeasArray();
       const xssComment = makeXssComment();
 
       beforeEach("Insert test data", () => {
@@ -114,7 +118,7 @@ describe("Comments Endpoints", () => {
               .into("ideas")
               .insert(testIdeas)
               .then(() => {
-                return db.into("comments").insert(testComments);
+                return db.into("comments").insert(xssComment);
               });
           });
       });
@@ -125,19 +129,7 @@ describe("Comments Endpoints", () => {
           .set("Authorization", "bearer " + process.env.API_TOKEN)
           .expect(200)
           .expect(res => {
-            expect(res.body.first_name).to.eql(
-              '&lt;script&gt;alert("xss");&lt;/script&gt;'
-            );
-            expect(res.body.last_name).to.eql(
-              '<img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.'
-            );
-            expect(res.body.email).to.eql(
-              '&lt;script&gt;alert("xss");&lt;/script&gt;'
-            );
-            expect(res.body.password).to.eql(
-              '&lt;script&gt;alert("xss");&lt;/script&gt;'
-            );
-            expect(res.body.nickname).to.eql(
+            expect(res.body.comment_text).to.eql(
               '&lt;script&gt;alert("xss");&lt;/script&gt;'
             );
           });
@@ -146,13 +138,21 @@ describe("Comments Endpoints", () => {
   });
 
   describe("POST /api/comments", () => {
+    const testUsers = makeUsersArray();
+    const testIdeas = makeIdeasArray();
+
+    beforeEach("Insert test data", () => {
+      return db("users")
+        .insert(testUsers)
+        .then(() => {
+          return db.into("ideas").insert(testIdeas);
+        });
+    });
     it("Responds with status 201, return new comment, and inserts new comment into database", () => {
       const newComment = {
-        first_name: "Test",
-        last_name: "Post",
-        email: "test.post@testing.com",
-        password: "testyPost1!",
-        nickname: "ElPosterOfTestiness1!"
+        comment_text: "Testing the comments post method",
+        author: 1,
+        project: 1
       };
       return supertest(app)
         .post("/api/comments")
@@ -160,14 +160,14 @@ describe("Comments Endpoints", () => {
         .send(newComment)
         .expect(201)
         .expect(res => {
-          expect(res.body.first_name).to.eql(newComment.first_name);
+          expect(res.body.comment_text).to.eql(newComment.comment_text);
           expect(res.body.last_name).to.eql(newComment.last_name);
           expect(res.body.email).to.eql(newComment.email);
-          expect(res.body.password).to.eql(newComment.password);
-          expect(res.body.nickname).to.eql(newComment.nickname);
+          expect(res.body.author).to.eql(newComment.author);
+          expect(res.body.project).to.eql(newComment.project);
           expect(res.body).to.have.property("id");
           expect(res.body).to.have.property("votes");
-          expect(res.body).to.have.property("date_created");
+          expect(res.body).to.have.property("date_submitted");
           expect(res.headers.location).to.eql(`/api/comments/${res.body.id}`);
         })
         .then(postRes =>
@@ -178,34 +178,14 @@ describe("Comments Endpoints", () => {
         );
     });
 
-    const requiredFields = [
-      "first_name",
-      "last_name",
-      "email",
-      "password",
-      "nickname"
-    ];
-
-    requiredFields.forEach(field => {
-      const newComment = {
-        first_name: "Test",
-        last_name: "Post",
-        email: "test.post@testing.com",
-        password: "testyPost1!",
-        nickname: "ElPosterOfTestiness1!"
-      };
-
-      it(`responds with status 400 when '${field}' is missing from request body`, () => {
-        delete newComment[field];
-
-        return supertest(app)
-          .post("/api/comments")
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
-          .send(newComment)
-          .expect(400, {
-            error: { message: `Missing '${field}' in the request body` }
-          });
-      });
+    it(`responds with status 400 when 'comment_text' is missing from request body`, () => {
+      return supertest(app)
+        .post("/api/comments")
+        .set("Authorization", "bearer " + process.env.API_TOKEN)
+        .send({})
+        .expect(400, {
+          error: { message: `Missing 'comment_text' in the request body` }
+        });
     });
   });
 
@@ -221,6 +201,8 @@ describe("Comments Endpoints", () => {
     });
 
     context("data in the comments table", () => {
+      const testUsers = makeUsersArray();
+      const testIdeas = makeIdeasArray();
       const testComments = makeCommentsArray();
 
       beforeEach("Insert test data", () => {
@@ -267,6 +249,8 @@ describe("Comments Endpoints", () => {
     });
 
     context("data in comments table", () => {
+      const testUsers = makeUsersArray();
+      const testIdeas = makeIdeasArray();
       const testComments = makeCommentsArray();
 
       beforeEach("Insert test data", () => {
@@ -285,10 +269,7 @@ describe("Comments Endpoints", () => {
       it("responds with status 204 and updates the comment", () => {
         const idToUpdate = 2;
         const updatedComment = {
-          first_name: "Test",
-          last_name: "Patch",
-          email: "test.patch@patchtesting.com",
-          nickname: "testyPatch"
+          comment_text: "Testing the patch method"
         };
         const expectedComment = {
           ...testComments[idToUpdate - 1],
@@ -315,35 +296,9 @@ describe("Comments Endpoints", () => {
           .send({ irrelevantField: "No Field Exists" })
           .expect(400, {
             error: {
-              message:
-                "Request body must contain first_name, last_name, email, nickname, and or password"
+              message: "Request body must contain 'comment_text'"
             }
           });
-      });
-
-      it("responds with status 204 when updating subset of fields", () => {
-        const idToUpdate = 2;
-        const updatedComment = {
-          first_name: "Testy"
-        };
-        const expectedComment = {
-          ...testComments[idToUpdate - 1],
-          ...updatedComment
-        };
-        return supertest(app)
-          .patch(`/api/comments/${idToUpdate}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
-          .send({
-            ...updatedComment,
-            fieldToIgnore: "Should not be in GET response"
-          })
-          .expect(204)
-          .then(res =>
-            supertest(app)
-              .get(`/api/comments/${idToUpdate}`)
-              .set("Authorization", "bearer " + process.env.API_TOKEN)
-              .expect(expectedComment)
-          );
       });
     });
   });
