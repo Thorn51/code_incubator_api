@@ -68,8 +68,19 @@ function makeXssUser() {
     }
   ];
 }
+function makeXssComment() {
+  return [
+    {
+      id: 1,
+      user_id: 2,
+      comment_text: '<script>alert("xss");</script>',
+      date_submitted: "2020-01-30T07:00:00.000Z",
+      votes: 0
+    }
+  ];
+}
 
-function makeComments() {
+function makeCommentsArray() {
   return [
     {
       id: "1",
@@ -230,7 +241,8 @@ function makeUsersArray() {
 module.exports = {
   makeIdeasArray,
   makeXssIdea,
-  makeComments,
+  makeCommentsArray,
   makeUsersArray,
-  makeXssUser
+  makeXssUser,
+  makeXssComment
 };
