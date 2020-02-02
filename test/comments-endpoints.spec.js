@@ -1,9 +1,14 @@
 const { expect } = require("chai");
 const knex = require("knex");
 const app = require("../src/app");
-const { makeCommentsArray, makeXssComment } = require("./fixtures");
+const {
+  makeCommentsArray,
+  makeXssComment,
+  makeUsersArray,
+  makeIdeasArray
+} = require("./fixtures");
 
-describe.only("Comments Endpoints", () => {
+describe("Comments Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -16,14 +21,15 @@ describe.only("Comments Endpoints", () => {
 
   after("Disconnect from test database", () => db.destroy());
 
-  before("Clean table", () =>
-    db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
-  );
-  afterEach("Remove data after each test", () =>
-    db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
+  before("Remove data from table", () =>
+    db.raw("TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE")
   );
 
-  describe("GET /api/comments", () => {
+  afterEach(() =>
+    db.raw("TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE")
+  );
+
+  describe.only("GET /api/comments", () => {
     context("No data in comments table", () => {
       it("Returns an empty array and status 200", () => {
         return supertest(app)
@@ -34,10 +40,21 @@ describe.only("Comments Endpoints", () => {
     });
 
     context("Data in the comments table", () => {
+      const testUsers = makeUsersArray();
+      const testIdeas = makeIdeasArray();
       const testComments = makeCommentsArray();
 
       beforeEach("Insert test data", () => {
-        return db("comments").insert(testComments);
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into("ideas")
+              .insert(testIdeas)
+              .then(() => {
+                return db.into("comments").insert(testComments);
+              });
+          });
       });
 
       it(`GET /api/comments responds with status 200 and all of the comments`, () => {
