@@ -16,9 +16,13 @@ describe("Ideas Endpoints", () => {
 
   after("Disconnect from test database", () => db.destroy());
 
-  before("Clean table", () => db("ideas").truncate());
+  before("Clean table", () =>
+    db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
+  );
 
-  afterEach("Remove data after each test", () => db("ideas").truncate());
+  afterEach("Remove data after each test", () =>
+    db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
+  );
 
   describe("GET /api/ideas", () => {
     context("No data in ideas table", () => {
