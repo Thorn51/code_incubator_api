@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const xss = require("xss");
 const logger = require("../logger");
+const CommentsService = require("./comments-service");
 
 const commentsRouter = express.Router();
 const bodyParser = express.json();
@@ -15,9 +16,22 @@ const serializeComment = comment => ({
 });
 
 commentsRouter
-  .route("/comments")
-  .get((req, res) => {
-    res.json(comments);
+  .route("/")
+  .get((req, res, next) => {
+    CommentsService.getAllComments(req.app.get("db"))
+      .then(comments => {
+        res.json(
+          comments.map(comment => ({
+            id: comment.id,
+            comment_text: xss(comment.comment_text),
+            votes: comment.votes,
+            date_submitted: comment.date_submitted,
+            author: comment.author,
+            project: comment.project
+          }))
+        );
+      })
+      .catch(next);
     logger.info(`GET "/comments" response status 200`);
   })
   .post(bodyParser, (req, res) => {
