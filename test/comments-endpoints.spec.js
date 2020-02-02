@@ -81,8 +81,18 @@ describe("Comments Endpoints", () => {
       const testComments = makeCommentsArray();
 
       beforeEach("Insert test data", () => {
-        return db("comments").insert(testComments);
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into("ideas")
+              .insert(testIdeas)
+              .then(() => {
+                return db.into("comments").insert(testComments);
+              });
+          });
       });
+
       it("GET /api/comments/:id returns the comment by id and status 200", () => {
         const queryId = 3;
         const expectedComment = testComments[queryId - 1];
@@ -96,8 +106,17 @@ describe("Comments Endpoints", () => {
     context("Given an XSS attack comment", () => {
       const xssComment = makeXssComment();
 
-      beforeEach("insert malicious comment", () => {
-        return db.into("comments").insert(xssComment);
+      beforeEach("Insert test data", () => {
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into("ideas")
+              .insert(testIdeas)
+              .then(() => {
+                return db.into("comments").insert(testComments);
+              });
+          });
       });
 
       it("removes XSS content", () => {
@@ -204,8 +223,17 @@ describe("Comments Endpoints", () => {
     context("data in the comments table", () => {
       const testComments = makeCommentsArray();
 
-      beforeEach("insert test data", () => {
-        return db.into("comments").insert(testComments);
+      beforeEach("Insert test data", () => {
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into("ideas")
+              .insert(testIdeas)
+              .then(() => {
+                return db.into("comments").insert(testComments);
+              });
+          });
       });
 
       it("responds with status 204 and removes the comment", () => {
@@ -241,8 +269,17 @@ describe("Comments Endpoints", () => {
     context("data in comments table", () => {
       const testComments = makeCommentsArray();
 
-      beforeEach("insert test data", () => {
-        return db.into("comments").insert(testComments);
+      beforeEach("Insert test data", () => {
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into("ideas")
+              .insert(testIdeas)
+              .then(() => {
+                return db.into("comments").insert(testComments);
+              });
+          });
       });
 
       it("responds with status 204 and updates the comment", () => {
