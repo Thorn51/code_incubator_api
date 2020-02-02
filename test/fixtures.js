@@ -32,6 +32,17 @@ function makeIdeasArray() {
       github: "fake_url",
       votes: "25",
       author: 3
+    },
+    {
+      id: 4,
+      project_title: "Fourth Project",
+      project_summary:
+        "Lorem ipsum dolor sit amet, te autem soluta facilisi vel, feugiat perfecto sapientem sit ei, in sit electram abhorreant. Ne nam aeterno labitur admodum, qui timeam quaerendum ullamcorper ut. Porro debet molestie eu duo, sea no essent feugait. In nec atqui scaevola, ea sed everti sanctus convenire. Ea quod discere pri, hinc incorrupte ne his.",
+      date_submitted: "2019-12-21T07:00:00.000Z",
+      status: "Idea",
+      github: "fake_url",
+      votes: "25",
+      author: 3
     }
   ];
 }
@@ -72,10 +83,11 @@ function makeXssComment() {
   return [
     {
       id: 1,
-      user_id: 2,
       comment_text: '<script>alert("xss");</script>',
+      votes: 0,
       date_submitted: "2020-01-30T07:00:00.000Z",
-      votes: 0
+      author: 2,
+      project: 1
     }
   ];
 }
@@ -83,111 +95,111 @@ function makeXssComment() {
 function makeCommentsArray() {
   return [
     {
-      id: "1",
-      user_id: "2",
-      project_id: "1",
+      id: 1,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
-      votes: "15"
+      votes: "15",
+      date_submitted: "2020-01-30T07:00:00.000Z",
+      author: 2,
+      project: 1
     },
     {
-      id: "2",
-      user_id: "3",
-      project_id: "1",
+      id: 2,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
-      votes: "9"
+      votes: "9",
+      date_submitted: "2020-01-30T07:00:00.000Z",
+      author: 3,
+      project: 1
     },
     {
-      id: "3",
-      user_id: "4",
-      project_id: "1",
+      id: 3,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
-      votes: "25"
+      votes: "25",
+      date_submitted: "2020-01-30T07:00:00.000Z",
+      author: 4,
+      project: 1
     },
     {
-      id: "4",
-      user_id: "1",
-      project_id: "2",
+      id: 4,
+      author: 1,
+      project: 2,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
+      date_submitted: "2020-01-30T07:00:00.000Z",
       votes: "0"
     },
     {
-      id: "5",
-      user_id: "3",
-      project_id: "2",
+      id: 5,
+      author: 3,
+      project: 2,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
+      date_submitted: "2020-01-30T07:00:00.000Z",
       votes: "7"
     },
     {
-      id: "6",
-      user_id: "4",
-      project_id: "2",
+      id: 6,
+      author: 4,
+      project: 2,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
+      date_submitted: "2020-01-30T07:00:00.000Z",
       votes: "10"
     },
     {
-      id: "7",
-      user_id: "1",
-      project_id: "3",
+      id: 7,
+      author: 1,
+      project: 3,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
+      date_submitted: "2020-01-30T07:00:00.000Z",
       votes: "3"
     },
     {
-      id: "8",
-      user_id: "2",
-      project_id: "3",
+      id: 8,
+      author: 2,
+      project: 3,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
       date_submitted: "2020-12-21T07:00:00.000Z",
       votes: "6"
     },
     {
-      id: "9",
-      user_id: "4",
-      project_id: "3",
+      id: 9,
+      author: 4,
+      project: 3,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
       date_submitted: "2020-12-21T07:00:00.000Z",
       votes: "12"
     },
     {
-      id: "10",
-      user_id: "1",
-      project_id: "4",
+      id: 10,
+      author: 1,
+      project: 4,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
       date_submitted: "2020-12-21T07:00:00.000Z",
       votes: "1"
     },
     {
-      id: "11",
-      user_id: "2",
-      project_id: "4",
+      id: 11,
+      author: 2,
+      project: 4,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
       date_submitted: "2020-12-21T07:00:00.000Z",
       votes: "16"
     },
     {
-      id: "12",
-      user_id: "3",
-      project_id: "4",
+      id: 12,
+      author: 3,
+      project: 4,
       comment_text:
         "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-      date_submitted: "12.21.20",
+      date_submitted: "2020-01-30T07:00:00.000Z",
       votes: "3"
     }
   ];
