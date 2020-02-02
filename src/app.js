@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/ideas", ideasRouter);
-app.use("/comments", commentsRouter);
+app.use("/api/comments", commentsRouter);
 app.use("/api/users", usersRouter);
 
 app.use(function errorHandler(error, req, res, next) {
