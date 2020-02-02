@@ -52,6 +52,23 @@ function makeXssIdea() {
   ];
 }
 
+function makeXssUser() {
+  return [
+    {
+      id: 1,
+      first_name: '<script>alert("xss");</script>',
+      last_name:
+        '<img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.',
+      email: '<script>alert("xss");</script>',
+      password: '<script>alert("xss");</script>',
+      nickname: '<script>alert("xss");</script>',
+      date_created: "2020-01-30T07:00:00.000Z",
+      votes: 0,
+      date_created: "2020-01-30T07:00:00.000Z"
+    }
+  ];
+}
+
 function makeComments() {
   return [
     {
@@ -210,4 +227,10 @@ function makeUsersArray() {
   ];
 }
 
-module.exports = { makeIdeasArray, makeXssIdea, makeComments, makeUsersArray };
+module.exports = {
+  makeIdeasArray,
+  makeXssIdea,
+  makeComments,
+  makeUsersArray,
+  makeXssUser
+};
