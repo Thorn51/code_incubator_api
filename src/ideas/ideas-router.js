@@ -117,10 +117,12 @@ ideasRouter
   .delete((req, res, next) => {
     const { id } = req.params;
 
-    IdeasService.deleteIdea(req.app.get("db"), id).then(() => {
-      res.status(204).end();
-      logger.info(`DELETE "/api/ideas/:id" -> idea with id ${id} deleted`);
-    });
+    IdeasService.deleteIdea(req.app.get("db"), id)
+      .then(() => {
+        res.status(204).end();
+        logger.info(`DELETE "/api/ideas/:id" -> idea with id ${id} deleted`);
+      })
+      .catch(next);
   })
   .patch(bodyParser, (req, res, next) => {
     const { project_title, project_summary, status } = req.body;
