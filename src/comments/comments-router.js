@@ -1,20 +1,18 @@
 const express = require("express");
+const path = require("path");
+const xss = require("xss");
 const logger = require("../logger");
 
 const commentsRouter = express.Router();
 const bodyParser = express.json();
 
-const comments = [
-  {
-    id: "1",
-    user_id: "2",
-    project_id: "1",
-    comment_text:
-      "Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.",
-    date_submitted: "12.21.20",
-    votes: "15"
-  }
-];
+const serializeComment = comment => ({
+  id: comment.id,
+  comment_text: xss(comment.comment_text),
+  votes: comment.votes,
+  author: comment.author,
+  project: comment.project
+});
 
 commentsRouter
   .route("/comments")
