@@ -10,6 +10,7 @@ const bodyParser = express.json();
 const serializeComment = comment => ({
   id: comment.id,
   comment_text: xss(comment.comment_text),
+  date_submitted: comment.date_submitted,
   votes: comment.votes,
   author: comment.author,
   project: comment.project
@@ -34,60 +35,84 @@ commentsRouter
       .catch(next);
     logger.info(`GET "/comments" response status 200`);
   })
-  .post(bodyParser, (req, res) => {
-    const { comment_text, user_id, project_id } = req.body;
+  .post(bodyParser, (req, res, next) => {
+    const { comment_text, votes = 0, author, project } = req.body;
+    const newComment = {
+      comment_text,
+      votes,
+      author,
+      project
+    };
 
     if (!comment_text) {
       logger.error(`POST "/comments" missing comment in request body`);
-      return res.status(400).send("Invalid data");
+      return res.status(400).json({
+        error: { message: `Missing 'comment_text' in the request body` }
+      });
     }
 
-    const previousId =
-      comments.length === 0 ? 0 : comments[comments.length - 1].id;
-    const id = parseInt(previousId) + 1;
-    const votes = 0;
-
-    const newComment = {
-      id,
-      user_id,
-      project_id,
-      comment_text,
-      votes
-    };
-
-    comments.push(newComment);
-
-    res
-      .status(201)
-      .location(`http://localhost:8000/comments/${id}`)
-      .json(newComment);
-
-    logger.info(`POST "/comments" comment id=${id} created`);
+    CommentsService.insertComment(req.app.get("db"), newComment)
+      .then(comment => {
+        res
+          .status(201)
+          .location(path.posix.join(req.originalUrl, `/${comment.id}`))
+          .json(comment);
+        logger.info(`POST "/comments" comment id=${comment.id} created`);
+      })
+      .catch(next);
   });
 
 commentsRouter
-  .route("/comments/:id")
-  .get((req, res) => {
+  .route("/:id")
+  .all((req, res, next) => {
     const { id } = req.params;
-    const comment = comments.find(comment => comment.id === id);
 
-    if (!comment) {
-      logger.error(`GET "/comments/:id" id=${id} -> comment not found`);
-      return res.status(404).send("Comment not found");
-    }
-    logger.info(`GET "/comments/:id" -> comment.id=${id} delivered`);
-    res.status(200).json(comment);
+    CommentsService.getById(req.app.get("db"), id)
+      .then(comment => {
+        if (!comment) {
+          logger.error(`GET /api/comments/${id} -> comment not found`);
+          return res.status(404).json({
+            error: { message: "Comment doesn't exist" }
+          });
+        }
+        res.comment = comment;
+        next();
+      })
+      .catch(next);
   })
-  .delete((req, res) => {
-    const { id } = req.params;
-    const commentIndex = comments.findIndex(comment => comment.id === id);
+  .get((req, res) => {
+    res.status(200).json(serializeComment(res.comment));
+    logger.info(`GET /comments/${req.params.id} returned`);
+  })
+  .delete((req, res, next) => {
+    CommentsService.deleteComment(req.app.get("db"), req.params.id)
+      .then(() => {
+        res.status(204).end();
+        logger.info(`DELETE /comments/${req.params.id} successful`);
+      })
+      .catch(next);
+  })
+  .patch(bodyParser, (req, res, next) => {
+    const { comment_text } = req.body;
+    const commentUpdate = { comment_text };
 
-    if (commentIndex === -1) {
-      logger.error(`DELETE "/comments/:id" comment id=${id} not found`);
-      return res.status(404).send("Not Found");
+    if (!comment_text) {
+      logger.error(
+        `PATCH /api/comments/${req.params.id} -> request to edit did not contain relevant fields`
+      );
+      return res.status(400).json({
+        error: { message: "Request body must contain 'comment_text'" }
+      });
     }
-    res.status(204).end();
-    logger.info(`DELETE "/comments/:id" -> comment with id ${id} deleted`);
+
+    CommentsService.updateComment(
+      req.app.get("db"),
+      req.params.id,
+      commentUpdate
+    ).then(numRowsAffected => {
+      res.status(204).end();
+      logger.info(`PATCH /api/comments/${req.params.id} -> idea edited`);
+    });
   });
 
 module.exports = commentsRouter;
