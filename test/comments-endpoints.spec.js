@@ -8,7 +8,7 @@ const {
   makeIdeasArray
 } = require("./fixtures");
 
-describe.only("Comments Endpoints", () => {
+describe("Comments Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
