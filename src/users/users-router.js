@@ -58,125 +58,114 @@ usersRouter
       votes
     };
 
-    for (const [key, value] of Object.entries(newUser)) {
-      if (value === null) {
-        logger.error(`POST /api/users -> Missing ${key} in the request body`);
-        return res.status(400).json({
-          error: { message: `Missing ${key} in the request body` }
-        });
-      }
+    // for (const [key, value] of Object.entries(newUser)) {
+    //   if (value === undefined) {
+    //     logger.error(`POST /api/users -> Missing ${key} in the request body`);
+    //     return res.status(400).json({
+    //       error: { message: `Missing '${key}' in the request body` }
+    //     });
+    //   }
+    // }
+
+    if (!first_name) {
+      logger.error(`POST /api/users -> Missing first_name in the request body`);
+      return res.status(400).json({
+        error: { message: `Missing 'first_name' in the request body` }
+      });
+    }
+    if (!last_name) {
+      logger.error(`POST /api/users -> Missing last_name in the request body`);
+      return res.status(400).json({
+        error: { message: `Missing 'last_name' in the request body` }
+      });
+    }
+    if (!email) {
+      logger.error(`POST /api/users -> Missing email in the request body`);
+      return res.status(400).json({
+        error: { message: `Missing 'email' in the request body` }
+      });
+    }
+    if (!password) {
+      logger.error(`POST /api/users -> Missing password in the request body`);
+      return res.status(400).json({
+        error: { message: `Missing 'password' in the request body` }
+      });
+    }
+    if (!nickname) {
+      logger.error(`POST /api/users -> Missing nickname in the request body`);
+      return res.status(400).json({
+        error: { message: `Missing 'nickname' in the request body` }
+      });
     }
 
-    UsersService.insertUser(req.app.get("db"), newUser).then(user => {
-      logger.info(`POST /api/users -> user id=${user.id} created`);
-      res
-        .status(201)
-        .location(path.posix.join(req.originalUrl, `/${user.id}`))
-        .json(serializeUser(user));
-    });
+    UsersService.insertUser(req.app.get("db"), newUser)
+      .then(user => {
+        logger.info(`POST /api/users -> user id=${user.id} created`);
+        res
+          .status(201)
+          .location(path.posix.join(req.originalUrl, `/${user.id}`))
+          .json(serializeUser(user));
+      })
+      .catch(next);
   });
 
 usersRouter
   .route("/:id")
-  .get((req, res) => {
-    const { id } = req.params;
-    const user = users.find(user => user.id === id);
-
-    if (!user) {
-      logger.error(`GET "/users/:id" id=${id} -> user not found`);
-      return res.status(404).send("User not found");
-    }
-    logger.info(`GET "/users/:id" -> user.id=${id} delivered`);
-    res.status(200).json({ id });
+  .all((req, res, next) => {
+    UsersService.getById(req.app.get("db"), req.params.id)
+      .then(user => {
+        if (!user) {
+          logger.error(
+            `GET /api/users/:id -> user id=${req.params.id} not found`
+          );
+          return res.status(404).json({
+            error: { message: "User doesn't exist" }
+          });
+        }
+        res.user = user;
+        next();
+      })
+      .catch(next);
   })
-  .delete((req, res) => {
+  .get((req, res, next) => {
+    res.status(200).json(serializeUser(res.user));
+    logger.info(`GET /users/:id -> user.id=${res.user.id} returned`);
+  })
+  .delete((req, res, next) => {
     const { id } = req.params;
-    const userIndex = users.findIndex(user => user.id === id);
 
-    if (userIndex === -1) {
-      logger.error(`DELETE "/users/:id" user id=${id} not found`);
-      return res.status(404).send("Not Found");
+    UsersService.deleteUser(req.app.get("db"), id)
+      .then(() => {
+        res.status(204).end();
+        logger.info(`DELETE "/users/:id" -> user with id ${id} deleted`);
+      })
+      .catch(next);
+  })
+  .patch(bodyParser, (req, res, next) => {
+    const { first_name, last_name, email, nickname, password } = req.body;
+
+    const userUpdate = { first_name, last_name, email, nickname, password };
+
+    const numberOfValues = Object.values(userUpdate).filter(Boolean).length;
+
+    if (numberOfValues === 0) {
+      logger.error(
+        `PATCH "/api/ideas/:id" -> request to edit did not contain relevant fields`
+      );
+      return res.status(400).json({
+        error: {
+          message:
+            "Request body must contain first_name, last_name, email, nickname, and or password"
+        }
+      });
     }
-    res.status(204).end;
-    logger.info(`DELETE "/users/:id" -> user with id ${id} deleted`);
+
+    UsersService.updateUser(req.app.get("db"), req.params.id, userUpdate)
+      .then(numRowsAffect => {
+        res.status(204).end();
+      })
+      .catch(next);
+    logger.info(`PATCH "/api/users/:id" -> idea id ${req.params.id} edited`);
   });
-
-usersRouter.route("/users/registration").post(bodyParser, (req, res) => {
-  const { first_name, last_name, nickname, email, password } = req.body;
-
-  if (!first_name) {
-    logger.error(
-      'POST "/users/registration" first_name missing in request body'
-    );
-    return res.status(400).send("Invalid Data");
-  }
-  if (!last_name) {
-    logger.error(
-      'POST "/users/registration" last_name missing in request body'
-    );
-    return res.status(400).send("Invalid Data");
-  }
-  if (!nickname) {
-    logger.error('POST "/users/registration" nickname missing in request body');
-    return res.status(400).send("Invalid Data");
-  }
-  if (!email) {
-    logger.error('POST "/users/registration" email missing in request body');
-    return res.status(400).send("Invalid Data");
-  }
-  if (!password) {
-    logger.error('POST "/users/registration" password missing in request body');
-    return res.status(400).send("Invalid Data");
-  }
-
-  const previousId = users.length === 0 ? 0 : users[users.length - 1].id;
-  const id = parseInt(previousId) + 1;
-  const votes = 0;
-
-  const newUser = {
-    id,
-    first_name,
-    last_name,
-    email,
-    password,
-    nickname,
-    votes
-  };
-
-  users.push(newUser);
-
-  res
-    .status(201)
-    .location(path.posix.join(req.originalUrl, `/${newUser.id}`))
-    .json(newUser);
-});
-
-usersRouter.route("/users/login").post(bodyParser, (req, res) => {
-  const { email, password } = req.body;
-  const user = users.find(user => user.email === email);
-
-  if (!email) {
-    logger.error(`POST "/users/login" email missing from request body`);
-    return res.status(400).send("Invalid request");
-  }
-
-  if (!password) {
-    logger.error(`POST "/users/login" password missing from request body`);
-    return res.status(400).send("Invalid request");
-  }
-
-  if (!user) {
-    logger.error(`POST "/users/login" the user doesn't exist`);
-    return res.status(400).send("Invalid request");
-  }
-
-  if (user.password !== password) {
-    logger.error(`POST "/users/login" passwords do not match`);
-    return res.status(401).send("Unauthorized");
-  }
-
-  res.status(204).end();
-  logger.info(`POST "/users/login" user ${user.id} logged in`);
-});
 
 module.exports = usersRouter;
