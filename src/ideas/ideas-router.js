@@ -14,7 +14,8 @@ const serializeIdea = idea => ({
   date_submitted: idea.date_submitted,
   github: xss(idea.github),
   votes: idea.votes,
-  status: idea.status
+  status: idea.status,
+  author: idea.author
 });
 
 ideasRouter
@@ -31,7 +32,8 @@ ideasRouter
             date_submitted: idea.date_submitted,
             status: idea.status,
             github: idea.github,
-            votes: idea.votes
+            votes: idea.votes,
+            author: idea.author
           }))
         );
       })
