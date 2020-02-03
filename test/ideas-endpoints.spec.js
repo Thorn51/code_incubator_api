@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const knex = require("knex");
 const app = require("../src/app");
-const { makeIdeasArray, makeXssIdea } = require("./fixtures");
+const { makeUsersArray, makeIdeasArray, makeXssIdea } = require("./fixtures");
 
 describe("Ideas Endpoints", () => {
   let db;
@@ -35,10 +35,15 @@ describe("Ideas Endpoints", () => {
     });
 
     context("Data in the ideas table", () => {
+      const testUsers = makeUsersArray();
       const testIdeas = makeIdeasArray();
 
       beforeEach("Insert test data", () => {
-        return db("ideas").insert(testIdeas);
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db("ideas").insert(testIdeas);
+          });
       });
 
       it(`GET /api/ideas responds with status 200 and all of the ideas`, () => {
@@ -62,11 +67,17 @@ describe("Ideas Endpoints", () => {
     });
 
     context("Data in the ideas table", () => {
+      const testUsers = makeUsersArray();
       const testIdeas = makeIdeasArray();
 
       beforeEach("Insert test data", () => {
-        return db("ideas").insert(testIdeas);
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db("ideas").insert(testIdeas);
+          });
       });
+
       it("GET /api/ideas/:id returns the idea by id and status 200", () => {
         const queryId = 3;
         const expectedIdea = testIdeas[queryId - 1];
@@ -78,10 +89,15 @@ describe("Ideas Endpoints", () => {
     });
 
     context("Given an XSS attack idea", () => {
+      const testUsers = makeUsersArray();
       const xssIdea = makeXssIdea();
 
-      beforeEach("insert malicious article", () => {
-        return db.into("ideas").insert(xssIdea);
+      beforeEach("Insert test data", () => {
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db("ideas").insert(xssIdea);
+          });
       });
 
       it("removes XSS content", () => {
@@ -165,10 +181,15 @@ describe("Ideas Endpoints", () => {
     });
 
     context("data in the ideas table", () => {
+      const testUsers = makeUsersArray();
       const testIdeas = makeIdeasArray();
 
-      beforeEach("insert test data", () => {
-        return db.into("ideas").insert(testIdeas);
+      beforeEach("Insert test data", () => {
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db("ideas").insert(testIdeas);
+          });
       });
 
       it("responds with status 204 and removes the idea", () => {
@@ -202,10 +223,15 @@ describe("Ideas Endpoints", () => {
     });
 
     context("data in ideas table", () => {
+      const testUsers = makeUsersArray();
       const testIdeas = makeIdeasArray();
 
-      beforeEach("insert test data", () => {
-        return db.into("ideas").insert(testIdeas);
+      beforeEach("Insert test data", () => {
+        return db("users")
+          .insert(testUsers)
+          .then(() => {
+            return db("ideas").insert(testIdeas);
+          });
       });
 
       it("responds with status 204 and updates the idea", () => {
