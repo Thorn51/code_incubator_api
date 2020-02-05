@@ -93,15 +93,15 @@ commentsRouter
       .catch(next);
   })
   .patch(bodyParser, (req, res, next) => {
-    const { comment_text } = req.body;
-    const commentUpdate = { comment_text };
+    const { comment_text, votes } = req.body;
+    const commentUpdate = { comment_text, votes };
 
-    if (!comment_text) {
+    if (comment_text === null && votes === null) {
       logger.error(
         `PATCH /api/comments/${req.params.id} -> request to edit did not contain relevant fields`
       );
       return res.status(400).json({
-        error: { message: "Request body must contain 'comment_text'" }
+        error: { message: "Request body must contain 'comment_text' or 'votes" }
       });
     }
 
@@ -109,10 +109,12 @@ commentsRouter
       req.app.get("db"),
       req.params.id,
       commentUpdate
-    ).then(numRowsAffected => {
-      res.status(204).end();
-      logger.info(`PATCH /api/comments/${req.params.id} -> idea edited`);
-    });
+    )
+      .then(numRowsAffected => {
+        res.status(200).json({ info: { message: "Request completed" } });
+        logger.info(`PATCH /api/comments/${req.params.id} -> comment edited`);
+      })
+      .catch(next);
   });
 
 module.exports = commentsRouter;
