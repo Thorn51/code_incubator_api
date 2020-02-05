@@ -42,6 +42,7 @@ ideasRouter
   })
   .post(bodyParser, (req, res, next) => {
     const {
+      author,
       project_title,
       project_summary,
       github = "",
@@ -50,6 +51,7 @@ ideasRouter
     } = req.body;
 
     const newIdea = {
+      author: author,
       project_title: xss(project_title),
       project_summary: xss(project_summary),
       github: xss(github),
@@ -127,30 +129,36 @@ ideasRouter
       .catch(next);
   })
   .patch(bodyParser, (req, res, next) => {
-    const { project_title, project_summary, status } = req.body;
-    const ideaUpdate = { project_title, project_summary, status };
+    const { project_title, project_summary, status, votes } = req.body;
+    const ideaUpdate = { project_title, project_summary, status, votes };
 
-    const numberOfValues = Object.values(ideaUpdate).filter(Boolean).length;
-
-    if (numberOfValues === 0) {
+    if (
+      project_title === undefined &&
+      project_summary === undefined &&
+      status === undefined &&
+      votes === undefined
+    ) {
       logger.error(
         `PATCH "/api/ideas/:id" -> request to edit did not contain relevant fields`
       );
       return res.status(400).json({
         error: {
           message:
-            "Request body must contain project_title, project_summary, or status"
+            "Request body must contain project_title, project_summary, status, and or votes"
         }
       });
     }
 
     IdeasService.updateIdea(req.app.get("db"), req.params.id, ideaUpdate)
       .then(numRowsAffected => {
-        res.status(204).end();
+        res.status(200).json({
+          info: { message: "Request completed" }
+        });
+        logger.info(
+          `PATCH "/api/ideas/:id" -> idea id ${req.params.id} edited`
+        );
       })
       .catch(next);
-
-    logger.info(`PATCH "/api/ideas/:id" -> idea id ${req.params.id} edited`);
   });
 
 module.exports = ideasRouter;
