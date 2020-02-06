@@ -225,6 +225,16 @@ function makeXssUser() {
   return [
     {
       id: 1,
+      first_name: "John",
+      last_name: "Doe",
+      email: "jdoe@devevlopmenttesting.com",
+      password: "notRealForDev!1",
+      nickname: "code_guru",
+      votes: "77",
+      date_created: "2020-12-21T07:00:00.000Z"
+    },
+    {
+      id: 2,
       first_name: '<script>alert("xss");</script>',
       last_name:
         '<img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.',
