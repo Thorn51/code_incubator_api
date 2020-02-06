@@ -3,7 +3,7 @@ const knex = require("knex");
 const app = require("../src/app");
 const { makeUsersArray, makeXssUser } = require("./fixtures");
 
-describe.only("Users Endpoints", () => {
+describe("Users Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -289,7 +289,7 @@ describe.only("Users Endpoints", () => {
     });
   });
 
-  describe.only("PATCH /api/users/:id", () => {
+  describe("PATCH /api/users/:id", () => {
     const testUsers = makeUsersArray();
     before("insert users for authorization", () => {
       return db("users").insert(testUsers);
