@@ -3,7 +3,7 @@ const knex = require("knex");
 const app = require("../src/app");
 const { makeUsersArray, makeXssUser } = require("./fixtures");
 
-describe("Users Endpoints", () => {
+describe.only("Users Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -23,9 +23,80 @@ describe("Users Endpoints", () => {
     db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
   );
 
+  function makeAuthHeader(user) {
+    const token = Buffer.from(`${user.email}:${user.password}`).toString(
+      "base64"
+    );
+    return `basic ${token}`;
+  }
+
+  describe("Protected endpoints", () => {
+    const testUsers = makeUsersArray();
+
+    beforeEach("Insert test data", () => {
+      return db("users").insert(testUsers);
+    });
+
+    const protectedEndpoints = [
+      {
+        name: "GET /api/users/:id",
+        path: "/api/users/1",
+        method: supertest(app).get
+      },
+      {
+        name: "DELETE /api/users/:id",
+        path: "/api/users/1",
+        method: supertest(app).delete
+      },
+      {
+        name: "PATCH /api/users/:id",
+        path: "/api/users/1",
+        method: supertest(app).patch
+      }
+    ];
+
+    protectedEndpoints.forEach(endpoint => {
+      describe(endpoint.name, () => {
+        it("responds with status 401 'Missing basic token' when no basic token", () => {
+          return endpoint
+            .method(endpoint.path)
+            .expect(401, { error: "Missing basic token" });
+        });
+        it("responds with status 401 'Unauthorized request' when no credentials", () => {
+          const userNoCredentials = { email: "", password: "" };
+          return endpoint
+            .method(endpoint.path)
+            .set("Authorization", makeAuthHeader(userNoCredentials))
+            .expect(401, { error: "Unauthorized request" });
+        });
+        it("responds with status 401 'Unauthorized request' when invalid user", () => {
+          const userInvalidCredentials = {
+            email: "Invalid",
+            password: "Invalid"
+          };
+          return endpoint
+            .method(endpoint.path)
+            .set("Authorization", makeAuthHeader(userInvalidCredentials))
+            .expect(401, { error: "Unauthorized request" });
+        });
+        it("responds with status 401 'Unauthorized request' when invalid password", () => {
+          const userInvalidPassword = {
+            email: testUsers[0].email,
+            password: "Invalid"
+          };
+          return endpoint
+            .method(endpoint.path)
+            .set("Authorization", makeAuthHeader(userInvalidPassword))
+            .expect(401, { error: "Unauthorized request" });
+        });
+      });
+    });
+  });
+
   describe("GET /api/users", () => {
     context("No data in users table", () => {
       it("Returns an empty array and status 200", () => {
+        const testUsers = makeUsersArray();
         return supertest(app)
           .get("/api/users")
           .set("Authorization", "bearer " + process.env.API_TOKEN)
@@ -50,12 +121,16 @@ describe("Users Endpoints", () => {
   });
 
   describe("GET /api/users/:id", () => {
-    context("No data in users table", () => {
+    const testUsers = makeUsersArray();
+    before("insert users for authorization", () => {
+      return db("users").insert(testUsers);
+    });
+    context("No user table", () => {
       it("Responds with error 404", () => {
-        const noUserId = 200;
+        const noUserId = testUsers.length + 10;
         return supertest(app)
           .get(`/api/users/${noUserId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: "User doesn't exist" } });
       });
     });
@@ -71,7 +146,7 @@ describe("Users Endpoints", () => {
         const expectedUser = testUsers[queryId - 1];
         return supertest(app)
           .get(`/api/users/${queryId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(200, expectedUser);
       });
     });
@@ -85,8 +160,8 @@ describe("Users Endpoints", () => {
 
       it("removes XSS content", () => {
         return supertest(app)
-          .get(`/api/users/${xssUser[0].id}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .get(`/api/users/${xssUser[1].id}`)
+          .set("Authorization", makeAuthHeader(xssUser[0]))
           .expect(200)
           .expect(res => {
             expect(res.body.first_name).to.eql(
@@ -137,7 +212,7 @@ describe("Users Endpoints", () => {
         .then(postRes =>
           supertest(app)
             .get(`/api/users/${postRes.body.id}`)
-            .set("Authorization", "bearer " + process.env.API_TOKEN)
+            .set("Authorization", makeAuthHeader(postRes.body))
             .expect(postRes.body)
         );
     });
@@ -174,12 +249,16 @@ describe("Users Endpoints", () => {
   });
 
   describe("DELETE /api/users/:id", () => {
+    const testUsers = makeUsersArray();
+    before("insert test users for authorization", () => {
+      return db("users").insert(testUsers);
+    });
     context("no data in the users table", () => {
       it("responds with status 404", () => {
         const userId = 987654;
         return supertest(app)
           .delete(`/api/users/${userId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `User doesn't exist` } });
       });
     });
@@ -198,25 +277,29 @@ describe("Users Endpoints", () => {
         );
         return supertest(app)
           .delete(`/api/users/${userIdToRemove}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(204)
           .then(res =>
             supertest(app)
               .get("/api/users")
-              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .set("Authorization", `bearer ${process.env.API_TOKEN}`)
               .expect(expectedUsers)
           );
       });
     });
   });
 
-  describe("PATCH /api/users/:id", () => {
-    context("no data in users table", () => {
+  describe.only("PATCH /api/users/:id", () => {
+    const testUsers = makeUsersArray();
+    before("insert users for authorization", () => {
+      return db("users").insert(testUsers);
+    });
+    context("no user in table", () => {
       it("responds with status 404", () => {
         const userId = 987654;
         return supertest(app)
           .patch(`/api/users${userId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(404);
       });
     });
@@ -242,13 +325,13 @@ describe("Users Endpoints", () => {
         };
         return supertest(app)
           .patch(`/api/users/${idToUpdate}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .send(updatedUser)
           .expect(204)
           .then(res =>
             supertest(app)
               .get(`/api/users/${idToUpdate}`)
-              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .set("Authorization", makeAuthHeader(testUsers[0]))
               .expect(expectedUser)
           );
       });
@@ -257,7 +340,7 @@ describe("Users Endpoints", () => {
         const idToUpdate = 2;
         return supertest(app)
           .patch(`/api/users/${idToUpdate}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .send({ irrelevantField: "No Field Exists" })
           .expect(400, {
             error: {
@@ -278,7 +361,7 @@ describe("Users Endpoints", () => {
         };
         return supertest(app)
           .patch(`/api/users/${idToUpdate}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .send({
             ...updatedUser,
             fieldToIgnore: "Should not be in GET response"
@@ -287,7 +370,7 @@ describe("Users Endpoints", () => {
           .then(res =>
             supertest(app)
               .get(`/api/users/${idToUpdate}`)
-              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .set("Authorization", makeAuthHeader(testUsers[0]))
               .expect(expectedUser)
           );
       });
