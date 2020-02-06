@@ -29,12 +29,107 @@ describe("Comments Endpoints", () => {
     db.raw("TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE")
   );
 
+  function makeAuthHeader(user) {
+    const token = Buffer.from(`${user.email}:${user.password}`).toString(
+      "base64"
+    );
+    return `basic ${token}`;
+  }
+
+  describe("Protected endpoints", () => {
+    const testUsers = makeUsersArray();
+    const testIdeas = makeIdeasArray();
+    const testComments = makeCommentsArray();
+
+    beforeEach("Insert test data", () => {
+      return db("users")
+        .insert(testUsers)
+        .then(() => {
+          return db
+            .into("ideas")
+            .insert(testIdeas)
+            .then(() => {
+              return db.into("comments").insert(testComments);
+            });
+        });
+    });
+
+    const protectedEndpoints = [
+      {
+        name: "GET /api/comments",
+        path: "/api/comments",
+        method: supertest(app).get
+      },
+      {
+        name: "GET /api/comments/:id",
+        path: "/api/comments/1",
+        method: supertest(app).get
+      },
+      {
+        name: "POST /api/comments",
+        path: "/api/comments",
+        method: supertest(app).post
+      },
+      {
+        name: "DELETE /api/comments/:id",
+        path: "/api/comments/1",
+        method: supertest(app).delete
+      },
+      {
+        name: "PATCH /api/comments/:id",
+        path: "/api/comments/1",
+        method: supertest(app).patch
+      }
+    ];
+
+    protectedEndpoints.forEach(endpoint => {
+      describe(endpoint.name, () => {
+        it("responds with status 401 'Missing basic token' when no basic token", () => {
+          return endpoint
+            .method(endpoint.path)
+            .expect(401, { error: "Missing basic token" });
+        });
+        it("responds with status 401 'Unauthorized request' when no credentials", () => {
+          const userNoCredentials = { email: "", password: "" };
+          return endpoint
+            .method(endpoint.path)
+            .set("Authorization", makeAuthHeader(userNoCredentials))
+            .expect(401, { error: "Unauthorized request" });
+        });
+        it("responds with status 401 'Unauthorized request' when invalid user", () => {
+          const userInvalidCredentials = {
+            email: "Invalid",
+            password: "Invalid"
+          };
+          return endpoint
+            .method(endpoint.path)
+            .set("Authorization", makeAuthHeader(userInvalidCredentials))
+            .expect(401, { error: "Unauthorized request" });
+        });
+        it("responds with status 401 'Unauthorized request' when invalid password", () => {
+          const userInvalidPassword = {
+            email: testUsers[0].email,
+            password: "Invalid"
+          };
+          return endpoint
+            .method(endpoint.path)
+            .set("Authorization", makeAuthHeader(userInvalidPassword))
+            .expect(401, { error: "Unauthorized request" });
+        });
+      });
+    });
+  });
+
   describe("GET /api/comments", () => {
     context("No data in comments table", () => {
+      const testUsers = makeUsersArray();
+      before("insert users", () => {
+        return db("users").insert(testUsers);
+      });
       it("Returns an empty array and status 200", () => {
         return supertest(app)
           .get("/api/comments")
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(200, []);
       });
     });
@@ -60,19 +155,23 @@ describe("Comments Endpoints", () => {
       it(`GET /api/comments responds with status 200 and all of the comments`, () => {
         return supertest(app)
           .get("/api/comments")
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(200, testComments);
       });
     });
   });
 
   describe("GET /api/comments/:id", () => {
+    const testUsers = makeUsersArray();
+    before("insert users", () => {
+      return db("users").insert(testUsers);
+    });
     context("No data in comments table", () => {
       it("Responds with error 404", () => {
         const noCommentId = 200;
         return supertest(app)
           .get(`/api/comments/${noCommentId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: "Comment doesn't exist" } });
       });
     });
@@ -100,7 +199,7 @@ describe("Comments Endpoints", () => {
         const expectedComment = testComments[queryId - 1];
         return supertest(app)
           .get(`/api/comments/${queryId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(200, expectedComment);
       });
     });
@@ -126,7 +225,7 @@ describe("Comments Endpoints", () => {
       it("removes XSS content", () => {
         return supertest(app)
           .get(`/api/comments/${xssComment[0].id}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(200)
           .expect(res => {
             expect(res.body.comment_text).to.eql(
@@ -156,7 +255,7 @@ describe("Comments Endpoints", () => {
       };
       return supertest(app)
         .post("/api/comments")
-        .set("Authorization", "bearer " + process.env.API_TOKEN)
+        .set("Authorization", makeAuthHeader(testUsers[0]))
         .send(newComment)
         .expect(201)
         .expect(res => {
@@ -173,7 +272,7 @@ describe("Comments Endpoints", () => {
         .then(postRes =>
           supertest(app)
             .get(`/api/comments/${postRes.body.id}`)
-            .set("Authorization", "bearer " + process.env.API_TOKEN)
+            .set("Authorization", makeAuthHeader(testUsers[0]))
             .expect(postRes.body)
         );
     });
@@ -181,7 +280,7 @@ describe("Comments Endpoints", () => {
     it(`responds with status 400 when 'comment_text' is missing from request body`, () => {
       return supertest(app)
         .post("/api/comments")
-        .set("Authorization", "bearer " + process.env.API_TOKEN)
+        .set("Authorization", makeAuthHeader(testUsers[0]))
         .send({})
         .expect(400, {
           error: { message: `Missing 'comment_text' in the request body` }
@@ -190,12 +289,16 @@ describe("Comments Endpoints", () => {
   });
 
   describe("DELETE /api/comments/:id", () => {
+    const testUsers = makeUsersArray();
     context("no data in the comments table", () => {
+      before("insert users", () => {
+        return db("users").insert(testUsers);
+      });
       it("responds with status 404", () => {
         const commentId = 987654;
         return supertest(app)
           .delete(`/api/comments/${commentId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `Comment doesn't exist` } });
       });
     });
@@ -225,12 +328,12 @@ describe("Comments Endpoints", () => {
         );
         return supertest(app)
           .delete(`/api/comments/${commentIdToRemove}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(204)
           .then(res =>
             supertest(app)
               .get("/api/comments")
-              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .set("Authorization", makeAuthHeader(testUsers[0]))
               .expect(expectedComments)
           );
       });
@@ -238,12 +341,16 @@ describe("Comments Endpoints", () => {
   });
 
   describe("PATCH /api/comments/:id", () => {
+    const testUsers = makeUsersArray();
+    before("insert users", () => {
+      return db("users").insert(testUsers);
+    });
     context("no data in comments table", () => {
       it("responds with status 404", () => {
         const commentId = 987654;
         return supertest(app)
           .patch(`/api/comments${commentId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(404);
       });
     });
@@ -277,13 +384,13 @@ describe("Comments Endpoints", () => {
         };
         return supertest(app)
           .patch(`/api/comments/${idToUpdate}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .send(updatedComment)
-          .expect(204)
+          .expect(200, { info: "Request completed" })
           .then(res =>
             supertest(app)
               .get(`/api/comments/${idToUpdate}`)
-              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .set("Authorization", makeAuthHeader(testUsers[0]))
               .expect(expectedComment)
           );
       });
@@ -292,11 +399,11 @@ describe("Comments Endpoints", () => {
         const idToUpdate = 2;
         return supertest(app)
           .patch(`/api/comments/${idToUpdate}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .send({ irrelevantField: "No Field Exists" })
           .expect(400, {
             error: {
-              message: "Request body must contain 'comment_text'"
+              message: "Request body must contain 'comment_text' or 'votes'"
             }
           });
       });
