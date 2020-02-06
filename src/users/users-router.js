@@ -3,7 +3,10 @@ const path = require("path");
 const logger = require("../logger");
 const UsersService = require("./users-service");
 const xss = require("xss");
-const { requireAuth } = require("../middleware/basic-auth");
+const {
+  requireAuth,
+  validateBearerToken
+} = require("../middleware/basic-auth");
 
 const usersRouter = express.Router();
 const bodyParser = express.json();
@@ -21,7 +24,7 @@ const serializeUser = user => ({
 
 usersRouter
   .route("/")
-  .all(requireAuth)
+  .all(validateBearerToken)
   .get((req, res, next) => {
     UsersService.getAllUsers(req.app.get("db"))
       .then(users => {
