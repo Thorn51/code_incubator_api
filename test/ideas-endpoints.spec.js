@@ -24,7 +24,14 @@ describe("Ideas Endpoints", () => {
     db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
   );
 
-  describe("GET /api/ideas", () => {
+  function makeAuthHeader(user) {
+    const token = Buffer.from(`${user.email}:${user.password}`).toString(
+      "base64"
+    );
+    return `basic ${token}`;
+  }
+
+  describe.only("GET /api/ideas", () => {
     context("No data in ideas table", () => {
       it("Returns an empty array and status 200", () => {
         return supertest(app)
@@ -55,13 +62,89 @@ describe("Ideas Endpoints", () => {
     });
   });
 
+  describe("Protected endpoints", () => {
+    const testUsers = makeUsersArray();
+    const testIdeas = makeIdeasArray();
+
+    beforeEach("Insert test data", () => {
+      return db("users")
+        .insert(testUsers)
+        .then(() => {
+          return db("ideas").insert(testIdeas);
+        });
+    });
+
+    const protectedEndpoints = [
+      {
+        name: "GET /api/articles/:id",
+        path: "/api/ideas/1",
+        method: supertest(app).get
+      },
+      {
+        name: "POST /api/ideas",
+        path: "/api/ideas",
+        method: supertest(app).post
+      },
+      {
+        name: "DELETE /api/ideas/:id",
+        path: "/api/ideas/1",
+        method: supertest(app).delete
+      },
+      {
+        name: "PATCH /api/ideas/:id",
+        path: "/api/ideas/1",
+        method: supertest(app).patch
+      }
+    ];
+
+    protectedEndpoints.forEach(endpoint => {
+      describe(endpoint.name, () => {
+        it("responds with status 401 'Missing basic token' when no basic token", () => {
+          return endpoint
+            .method(endpoint.path)
+            .expect(401, { error: "Missing basic token" });
+        });
+        it("responds with status 401 'Unauthorized request' when no credentials", () => {
+          const userNoCredentials = { email: "", password: "" };
+          return endpoint
+            .method(endpoint.path)
+            .set("Authorization", makeAuthHeader(userNoCredentials))
+            .expect(401, { error: "Unauthorized request" });
+        });
+        it("responds with status 401 'Unauthorized request' when invalid user", () => {
+          const userInvalidCredentials = {
+            email: "Invalid",
+            password: "Invalid"
+          };
+          return endpoint
+            .method(endpoint.path)
+            .set("Authorization", makeAuthHeader(userInvalidCredentials))
+            .expect(401, { error: "Unauthorized request" });
+        });
+        it("responds with status 401 'Unauthorized request' when invalid password", () => {
+          const userInvalidPassword = {
+            email: testUsers[0].email,
+            password: "Invalid"
+          };
+          return endpoint
+            .method(endpoint.path)
+            .set("Authorization", makeAuthHeader(userInvalidPassword))
+            .expect(401, { error: "Unauthorized request" });
+        });
+      });
+    });
+  });
+
   describe("GET /api/ideas/:id", () => {
+    const testUsers = makeUsersArray();
     context("No data in ideas table", () => {
+      beforeEach(() => {
+        return db.into("users").insert(testUsers);
+      });
       it("Responds with error 404", () => {
-        const noIdeaId = 200;
         return supertest(app)
-          .get(`/api/ideas/${noIdeaId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .get(`/api/ideas/200`)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: "Idea doesn't exist" } });
       });
     });
@@ -83,7 +166,7 @@ describe("Ideas Endpoints", () => {
         const expectedIdea = testIdeas[queryId - 1];
         return supertest(app)
           .get(`/api/ideas/${queryId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(200, expectedIdea);
       });
     });
@@ -103,7 +186,7 @@ describe("Ideas Endpoints", () => {
       it("removes XSS content", () => {
         return supertest(app)
           .get(`/api/ideas/${xssIdea[0].id}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(200)
           .expect(res => {
             expect(res.body.project_title).to.eql(
@@ -118,6 +201,10 @@ describe("Ideas Endpoints", () => {
   });
 
   describe("POST /api/ideas", () => {
+    const testUsers = makeUsersArray();
+    beforeEach(() => {
+      return db.into("users").insert(testUsers);
+    });
     it("Responds with status 201, return new idea, and inserts new idea into database", () => {
       const newIdea = {
         project_title: "Test Post Endpoint",
@@ -125,7 +212,7 @@ describe("Ideas Endpoints", () => {
       };
       return supertest(app)
         .post("/api/ideas")
-        .set("Authorization", "bearer " + process.env.API_TOKEN)
+        .set("Authorization", makeAuthHeader(testUsers[0]))
         .send(newIdea)
         .expect(201)
         .expect(res => {
@@ -141,7 +228,7 @@ describe("Ideas Endpoints", () => {
         .then(postRes =>
           supertest(app)
             .get(`/api/ideas/${postRes.body.id}`)
-            .set("Authorization", "bearer " + process.env.API_TOKEN)
+            .set("Authorization", makeAuthHeader(testUsers[0]))
             .expect(postRes.body)
         );
     });
@@ -160,7 +247,7 @@ describe("Ideas Endpoints", () => {
 
         return supertest(app)
           .post("/api/ideas")
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .send(newIdea)
           .expect(400, {
             error: { message: `Missing '${field}' in request body.` }
@@ -170,12 +257,16 @@ describe("Ideas Endpoints", () => {
   });
 
   describe("DELETE /api/ideas/:id", () => {
+    const testUsers = makeUsersArray();
     context("no data in the ideas table", () => {
+      before(() => {
+        return db.into("users").insert(testUsers);
+      });
       it("responds with status 404", () => {
         const ideaId = 987654;
         return supertest(app)
           .delete(`/api/ideas/${ideaId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `Idea doesn't exist` } });
       });
     });
@@ -199,12 +290,12 @@ describe("Ideas Endpoints", () => {
         );
         return supertest(app)
           .delete(`/api/ideas/${ideaIdToRemove}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(204)
           .then(res =>
             supertest(app)
               .get("/api/ideas")
-              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .set("Authorization", makeAuthHeader(testUsers[0]))
               .expect(expectedIdeas)
           );
       });
@@ -212,12 +303,13 @@ describe("Ideas Endpoints", () => {
   });
 
   describe("PATCH /api/ideas/:id", () => {
+    const testUsers = makeUsersArray();
     context("no data in ideas table", () => {
       it("responds with status 404", () => {
         const ideaId = 987654;
         return supertest(app)
           .patch(`/api/ideas${ideaId}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .expect(404);
       });
     });
@@ -234,7 +326,7 @@ describe("Ideas Endpoints", () => {
           });
       });
 
-      it("responds with status 204 and updates the idea", () => {
+      it("responds with status 200 and updates the idea", () => {
         const idToUpdate = 2;
         const updatedIdea = {
           project_title: "Test Patch",
@@ -247,13 +339,13 @@ describe("Ideas Endpoints", () => {
         };
         return supertest(app)
           .patch(`/api/ideas/${idToUpdate}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .send(updatedIdea)
-          .expect(204)
+          .expect(200, { info: "Request completed" })
           .then(res =>
             supertest(app)
               .get(`/api/ideas/${idToUpdate}`)
-              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .set("Authorization", makeAuthHeader(testUsers[0]))
               .expect(expectedIdea)
           );
       });
@@ -262,17 +354,17 @@ describe("Ideas Endpoints", () => {
         const idToUpdate = 2;
         return supertest(app)
           .patch(`/api/ideas/${idToUpdate}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .send({ irrelevantField: "No Field Exists" })
           .expect(400, {
             error: {
               message:
-                "Request body must contain project_title, project_summary, or status"
+                "Request body must contain project_title, project_summary, status, and or votes"
             }
           });
       });
 
-      it("responds with status 204 when updating a subset of fields", () => {
+      it("responds with status 200 when updating a subset of fields", () => {
         const idToUpdate = 2;
         const updateIdea = {
           project_title: "Test Patch on Title"
@@ -283,16 +375,16 @@ describe("Ideas Endpoints", () => {
         };
         return supertest(app)
           .patch(`/api/ideas/${idToUpdate}`)
-          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .set("Authorization", makeAuthHeader(testUsers[0]))
           .send({
             ...updateIdea,
             fieldToIgnore: "Should not be in GET response"
           })
-          .expect(204)
+          .expect(200, { info: "Request completed" })
           .then(res =>
             supertest(app)
               .get(`/api/ideas/${idToUpdate}`)
-              .set("Authorization", "bearer " + process.env.API_TOKEN)
+              .set("Authorization", makeAuthHeader(testUsers[0]))
               .expect(expectedIdea)
           );
       });
