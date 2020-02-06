@@ -295,7 +295,7 @@ describe("Ideas Endpoints", () => {
           .then(res =>
             supertest(app)
               .get("/api/ideas")
-              .set("Authorization", makeAuthHeader(testUsers[0]))
+              .set("Authorization", `bearer ${process.env.API_TOKEN}`)
               .expect(expectedIdeas)
           );
       });
