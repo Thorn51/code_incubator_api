@@ -38,11 +38,9 @@ commentsRouter
     logger.info(`GET "/comments" response status 200`);
   })
   .post(bodyParser, (req, res, next) => {
-    const { comment_text, votes = 0, author, project } = req.body;
+    const { comment_text, project } = req.body;
     const newComment = {
       comment_text,
-      votes,
-      author,
       project
     };
 
@@ -52,6 +50,8 @@ commentsRouter
         error: { message: `Missing 'comment_text' in the request body` }
       });
     }
+
+    newComment.author = req.user.id;
 
     CommentsService.insertComment(req.app.get("db"), newComment)
       .then(comment => {

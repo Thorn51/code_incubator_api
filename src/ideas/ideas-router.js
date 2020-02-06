@@ -46,7 +46,6 @@ ideasRouter
   })
   .post(requireAuth, bodyParser, (req, res, next) => {
     const {
-      author,
       project_title,
       project_summary,
       github = "",
@@ -55,17 +54,12 @@ ideasRouter
     } = req.body;
 
     const newIdea = {
-      author: author,
       project_title: xss(project_title),
       project_summary: xss(project_summary),
       github: xss(github),
       status,
       votes
     };
-    // if (!user_id) {
-    //   logger.error(`POST "/api/ideas" user_id missing in request body`);
-    //   return res.status(400).send("Invalid data");
-    // }console.log(req.body);
 
     if (!project_title) {
       logger.error(`POST "/api/ideas" project_title missing in request body`);
@@ -81,13 +75,7 @@ ideasRouter
       });
     }
 
-    // for (const [key, value] of Object.entries(newIdea)) {
-    //   if (value === null) {
-    //     return res.status(400).json({
-    //       error: { message: `Missing '${key}' in request body.` }
-    //     });
-    //   }
-    // }
+    newIdea.author = req.user.id;
 
     IdeasService.insertIdea(req.app.get("db"), newIdea)
       .then(idea => {
