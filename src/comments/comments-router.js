@@ -99,12 +99,14 @@ commentsRouter
     const { comment_text, votes } = req.body;
     const commentUpdate = { comment_text, votes };
 
-    if (comment_text === null && votes === null) {
+    if (comment_text === undefined && votes === undefined) {
       logger.error(
         `PATCH /api/comments/${req.params.id} -> request to edit did not contain relevant fields`
       );
       return res.status(400).json({
-        error: { message: "Request body must contain 'comment_text' or 'votes" }
+        error: {
+          message: "Request body must contain 'comment_text' or 'votes'"
+        }
       });
     }
 
@@ -114,7 +116,7 @@ commentsRouter
       commentUpdate
     )
       .then(numRowsAffected => {
-        res.status(200).json({ info: { message: "Request completed" } });
+        res.status(200).json({ info: "Request completed" });
         logger.info(`PATCH /api/comments/${req.params.id} -> comment edited`);
       })
       .catch(next);
