@@ -3,6 +3,7 @@ const path = require("path");
 const xss = require("xss");
 const logger = require("../logger");
 const CommentsService = require("./comments-service");
+const { requireAuth } = require("../middleware/basic-auth");
 
 const commentsRouter = express.Router();
 const bodyParser = express.json();
@@ -18,6 +19,7 @@ const serializeComment = comment => ({
 
 commentsRouter
   .route("/")
+  .all(requireAuth)
   .get((req, res, next) => {
     CommentsService.getAllComments(req.app.get("db"))
       .then(comments => {
@@ -64,6 +66,7 @@ commentsRouter
 
 commentsRouter
   .route("/:id")
+  .all(requireAuth)
   .all((req, res, next) => {
     const { id } = req.params;
 

@@ -3,6 +3,10 @@ const path = require("path");
 const logger = require("../logger");
 const IdeasService = require("./ideas-service");
 const xss = require("xss");
+const {
+  requireAuth,
+  validateBearerToken
+} = require("../middleware/basic-auth");
 
 const ideasRouter = express.Router();
 const bodyParser = express.json();
@@ -20,7 +24,7 @@ const serializeIdea = idea => ({
 
 ideasRouter
   .route("/")
-  .get((req, res, next) => {
+  .get(validateBearerToken, (req, res, next) => {
     const knexInstance = req.app.get("db");
     IdeasService.getAllIdeas(knexInstance)
       .then(ideas => {
@@ -40,7 +44,7 @@ ideasRouter
       .catch(next);
     logger.info(`GET "/api/ideas" response status 200`);
   })
-  .post(bodyParser, (req, res, next) => {
+  .post(requireAuth, bodyParser, (req, res, next) => {
     const {
       author,
       project_title,
@@ -98,6 +102,7 @@ ideasRouter
 
 ideasRouter
   .route("/:id")
+  .all(requireAuth)
   .all((req, res, next) => {
     IdeasService.getById(req.app.get("db"), req.params.id)
       .then(idea => {
@@ -151,9 +156,7 @@ ideasRouter
 
     IdeasService.updateIdea(req.app.get("db"), req.params.id, ideaUpdate)
       .then(numRowsAffected => {
-        res.status(200).json({
-          info: { message: "Request completed" }
-        });
+        res.status(200).json({ info: "Request completed" });
         logger.info(
           `PATCH "/api/ideas/:id" -> idea id ${req.params.id} edited`
         );
