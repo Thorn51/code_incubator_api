@@ -31,7 +31,7 @@ describe("Ideas Endpoints", () => {
     return `basic ${token}`;
   }
 
-  describe.only("GET /api/ideas", () => {
+  describe("GET /api/ideas", () => {
     context("No data in ideas table", () => {
       it("Returns an empty array and status 200", () => {
         return supertest(app)
