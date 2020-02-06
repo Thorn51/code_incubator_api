@@ -1,9 +1,6 @@
 const CommentsService = {
   getAllComments(knex) {
-    return knex
-      .select("*")
-      .from("comments")
-      .orderBy("votes", "desc");
+    return knex.select("*").from("comments");
   },
   insertComment(knex, newComment) {
     return knex
