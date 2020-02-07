@@ -167,7 +167,7 @@ function makeUsersArray() {
       first_name: "John",
       last_name: "Doe",
       email: "jdoe@devevlopmenttesting.com",
-      password: "$2a$12$d515ftTi6hRTdV.0r1xr5.Hbrd8V3W0yIA0guPghw6I6DQRADzCGm",
+      password: "notRealForDev!1",
       nickname: "code_guru",
       votes: "77",
       date_created: "2020-12-21T07:00:00.000Z"
@@ -177,7 +177,7 @@ function makeUsersArray() {
       first_name: "Luke",
       last_name: "Doe",
       email: "ldoe@devevlopmenttesting.com",
-      password: "$2a$12$S6MdndQF3HX6H8bLzMbl0ekpTvjiEb4rTal92xFuBcxY4MNfnERxC",
+      password: "notRealForDev2!",
       nickname: "react_champ",
       votes: "35",
       date_created: "2020-12-21T07:00:00.000Z"
@@ -187,7 +187,7 @@ function makeUsersArray() {
       first_name: "Bob",
       last_name: "Doe",
       email: "bdoe@devevlopmenttesting.com",
-      password: "$2a$12$X6XpGevXZ6pFgmp4PTq94OyKl17eSGY2gDcheocYcwCFKiLHR8DGa",
+      password: "notRealForDev3!",
       nickname: "jquery_king",
       votes: "20",
       date_created: "2020-12-21T07:00:00.000Z"
@@ -197,7 +197,7 @@ function makeUsersArray() {
       first_name: "Steve",
       last_name: "Doe",
       email: "sdoe@devevlopmenttesting.com",
-      password: "$2a$12$NeuK9BNnjouafYcSXfshd.QRSErVD4K.S4N0LPhjQzC1/ymCJf46m",
+      password: "notRealForDev4!",
       nickname: "css_aficianado",
       votes: "15",
       date_created: "2020-12-21T07:00:00.000Z"

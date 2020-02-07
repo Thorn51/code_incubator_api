@@ -2,6 +2,7 @@ const { expect } = require("chai");
 const knex = require("knex");
 const app = require("../src/app");
 const { makeUsersArray, makeIdeasArray, makeXssIdea } = require("./fixtures");
+const bcrypt = require("bcryptjs");
 
 describe("Ideas Endpoints", () => {
   let db;
@@ -31,6 +32,14 @@ describe("Ideas Endpoints", () => {
     return `basic ${token}`;
   }
 
+  function prepUsers(testUsers) {
+    const preppedUsers = testUsers.map(user => ({
+      ...user,
+      password: bcrypt.hashSync(user.password)
+    }));
+    return preppedUsers;
+  }
+
   describe("GET /api/ideas", () => {
     context("No data in ideas table", () => {
       it("Returns an empty array and status 200", () => {
@@ -47,7 +56,7 @@ describe("Ideas Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db("ideas").insert(testIdeas);
           });
@@ -68,7 +77,7 @@ describe("Ideas Endpoints", () => {
 
     beforeEach("Insert test data", () => {
       return db("users")
-        .insert(testUsers)
+        .insert(prepUsers(testUsers))
         .then(() => {
           return db("ideas").insert(testIdeas);
         });
@@ -139,7 +148,7 @@ describe("Ideas Endpoints", () => {
     const testUsers = makeUsersArray();
     context("No data in ideas table", () => {
       beforeEach(() => {
-        return db.into("users").insert(testUsers);
+        return db.into("users").insert(prepUsers(testUsers));
       });
       it("Responds with error 404", () => {
         return supertest(app)
@@ -155,7 +164,7 @@ describe("Ideas Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db("ideas").insert(testIdeas);
           });
@@ -177,7 +186,7 @@ describe("Ideas Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db("ideas").insert(xssIdea);
           });
@@ -203,7 +212,7 @@ describe("Ideas Endpoints", () => {
   describe("POST /api/ideas", () => {
     const testUsers = makeUsersArray();
     beforeEach(() => {
-      return db.into("users").insert(testUsers);
+      return db.into("users").insert(prepUsers(testUsers));
     });
     it("Responds with status 201, return new idea, and inserts new idea into database", () => {
       const newIdea = {
@@ -260,7 +269,7 @@ describe("Ideas Endpoints", () => {
     const testUsers = makeUsersArray();
     context("no data in the ideas table", () => {
       before(() => {
-        return db.into("users").insert(testUsers);
+        return db.into("users").insert(prepUsers(testUsers));
       });
       it("responds with status 404", () => {
         const ideaId = 987654;
@@ -277,7 +286,7 @@ describe("Ideas Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db("ideas").insert(testIdeas);
           });
@@ -320,7 +329,7 @@ describe("Ideas Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db("ideas").insert(testIdeas);
           });

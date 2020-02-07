@@ -7,6 +7,7 @@ const {
   makeUsersArray,
   makeIdeasArray
 } = require("./fixtures");
+const bcrypt = require("bcryptjs");
 
 describe("Comments Endpoints", () => {
   let db;
@@ -36,6 +37,14 @@ describe("Comments Endpoints", () => {
     return `basic ${token}`;
   }
 
+  function prepUsers(testUsers) {
+    const preppedUsers = testUsers.map(user => ({
+      ...user,
+      password: bcrypt.hashSync(user.password)
+    }));
+    return preppedUsers;
+  }
+
   describe("Protected endpoints", () => {
     const testUsers = makeUsersArray();
     const testIdeas = makeIdeasArray();
@@ -43,7 +52,7 @@ describe("Comments Endpoints", () => {
 
     beforeEach("Insert test data", () => {
       return db("users")
-        .insert(testUsers)
+        .insert(prepUsers(testUsers))
         .then(() => {
           return db
             .into("ideas")
@@ -124,7 +133,7 @@ describe("Comments Endpoints", () => {
     context("No data in comments table", () => {
       const testUsers = makeUsersArray();
       before("insert users", () => {
-        return db("users").insert(testUsers);
+        return db("users").insert(prepUsers(testUsers));
       });
       it("Returns an empty array and status 200", () => {
         return supertest(app)
@@ -141,7 +150,7 @@ describe("Comments Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db
               .into("ideas")
@@ -164,7 +173,7 @@ describe("Comments Endpoints", () => {
   describe("GET /api/comments/:id", () => {
     const testUsers = makeUsersArray();
     before("insert users", () => {
-      return db("users").insert(testUsers);
+      return db("users").insert(prepUsers(testUsers));
     });
     context("No data in comments table", () => {
       it("Responds with error 404", () => {
@@ -183,7 +192,7 @@ describe("Comments Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db
               .into("ideas")
@@ -211,7 +220,7 @@ describe("Comments Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db
               .into("ideas")
@@ -242,7 +251,7 @@ describe("Comments Endpoints", () => {
 
     beforeEach("Insert test data", () => {
       return db("users")
-        .insert(testUsers)
+        .insert(prepUsers(testUsers))
         .then(() => {
           return db.into("ideas").insert(testIdeas);
         });
@@ -292,7 +301,7 @@ describe("Comments Endpoints", () => {
     const testUsers = makeUsersArray();
     context("no data in the comments table", () => {
       before("insert users", () => {
-        return db("users").insert(testUsers);
+        return db("users").insert(prepUsers(testUsers));
       });
       it("responds with status 404", () => {
         const commentId = 987654;
@@ -310,7 +319,7 @@ describe("Comments Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db
               .into("ideas")
@@ -343,7 +352,7 @@ describe("Comments Endpoints", () => {
   describe("PATCH /api/comments/:id", () => {
     const testUsers = makeUsersArray();
     before("insert users", () => {
-      return db("users").insert(testUsers);
+      return db("users").insert(prepUsers(testUsers));
     });
     context("no data in comments table", () => {
       it("responds with status 404", () => {
@@ -362,7 +371,7 @@ describe("Comments Endpoints", () => {
 
       beforeEach("Insert test data", () => {
         return db("users")
-          .insert(testUsers)
+          .insert(prepUsers(testUsers))
           .then(() => {
             return db
               .into("ideas")
