@@ -16,7 +16,6 @@ const serializeUser = user => ({
   first_name: xss(user.first_name),
   last_name: xss(user.last_name),
   email: xss(user.email),
-  password: xss(user.password),
   nickname: xss(user.nickname),
   votes: user.votes,
   date_created: user.date_created
@@ -34,7 +33,6 @@ usersRouter
             first_name: xss(user.first_name),
             last_name: xss(user.last_name),
             email: xss(user.email),
-            password: xss(user.password),
             nickname: xss(user.nickname),
             votes: user.votes,
             date_created: user.date_created
@@ -62,15 +60,6 @@ usersRouter
       nickname: xss(nickname),
       votes
     };
-
-    // for (const [key, value] of Object.entries(newUser)) {
-    //   if (value === undefined) {
-    //     logger.error(`POST /api/users -> Missing ${key} in the request body`);
-    //     return res.status(400).json({
-    //       error: { message: `Missing '${key}' in the request body` }
-    //     });
-    //   }
-    // }
 
     if (!first_name) {
       logger.error(`POST /api/users -> Missing first_name in the request body`);
@@ -109,7 +98,7 @@ usersRouter
         res
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${user.id}`))
-          .json(serializeUser(user));
+          .json({ info: "Request completed " });
       })
       .catch(next);
   });
@@ -168,7 +157,7 @@ usersRouter
 
     UsersService.updateUser(req.app.get("db"), req.params.id, userUpdate)
       .then(numRowsAffect => {
-        res.status(204).end();
+        res.status(200).json({ info: "Request completed" });
       })
       .catch(next);
     logger.info(`PATCH "/api/users/:id" -> idea id ${req.params.id} edited`);
