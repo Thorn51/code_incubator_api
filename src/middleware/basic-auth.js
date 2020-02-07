@@ -1,3 +1,5 @@
+const AuthService = require("../auth/auth-service");
+const bcrypt = require("bcryptjs");
 const logger = require("../logger");
 
 function requireAuth(req, res, next) {
@@ -17,18 +19,21 @@ function requireAuth(req, res, next) {
   if (!tokenEmail || !tokenPassword) {
     return res.status(401).json({ error: "Unauthorized request" });
   }
-  req.app
-    .get("db")("users")
-    .where({ email: tokenEmail })
-    .first()
-    .then(user => {
-      if (!user || user.password !== tokenPassword) {
+
+  AuthService.getUserWithUserName(req.app.get("db"), tokenEmail).then(user => {
+    if (!user) {
+      logger.error("User was not found");
+      return res.status(401).json({ error: "Unauthorized request" });
+    }
+    return bcrypt.compare(tokenPassword, user.password).then(passwordsMatch => {
+      if (!passwordsMatch) {
         return res.status(401).json({ error: "Unauthorized request" });
       }
+
       req.user = user;
       next();
-    })
-    .catch(next);
+    });
+  });
 }
 
 function validateBearerToken(req, res, next) {
