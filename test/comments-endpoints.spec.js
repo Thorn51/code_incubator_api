@@ -8,6 +8,7 @@ const {
   makeIdeasArray
 } = require("./fixtures");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 describe("Comments Endpoints", () => {
   let db;
@@ -30,11 +31,12 @@ describe("Comments Endpoints", () => {
     db.raw("TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE")
   );
 
-  function makeAuthHeader(user) {
-    const token = Buffer.from(`${user.email}:${user.password}`).toString(
-      "base64"
-    );
-    return `basic ${token}`;
+  function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+    const token = jwt.sign({ user_id: user.id }, secret, {
+      subject: user.email,
+      algorithm: "HS256"
+    });
+    return `Bearer ${token}`;
   }
 
   function prepUsers(testUsers) {
@@ -93,36 +95,27 @@ describe("Comments Endpoints", () => {
 
     protectedEndpoints.forEach(endpoint => {
       describe(endpoint.name, () => {
-        it("responds with status 401 'Missing basic token' when no basic token", () => {
+        it("responds with status 401 'Missing bearer token' when no bearer token", () => {
           return endpoint
             .method(endpoint.path)
-            .expect(401, { error: "Missing basic token" });
+            .expect(401, { error: "Missing bearer token" });
         });
-        it("responds with status 401 'Unauthorized request' when no credentials", () => {
-          const userNoCredentials = { email: "", password: "" };
+        it("responds with status 401 'Unauthorized request' invalid JWT secret", () => {
+          const validUser = testUsers[0];
+          const invalidSecret = "Invalid";
           return endpoint
             .method(endpoint.path)
-            .set("Authorization", makeAuthHeader(userNoCredentials))
+            .set("Authorization", makeAuthHeader(validUser, invalidSecret))
             .expect(401, { error: "Unauthorized request" });
         });
-        it("responds with status 401 'Unauthorized request' when invalid user", () => {
+        it("responds with status 401 'Unauthorized request' when invalid sub in payload", () => {
           const userInvalidCredentials = {
             email: "Invalid",
-            password: "Invalid"
+            id: 1
           };
           return endpoint
             .method(endpoint.path)
             .set("Authorization", makeAuthHeader(userInvalidCredentials))
-            .expect(401, { error: "Unauthorized request" });
-        });
-        it("responds with status 401 'Unauthorized request' when invalid password", () => {
-          const userInvalidPassword = {
-            email: testUsers[0].email,
-            password: "Invalid"
-          };
-          return endpoint
-            .method(endpoint.path)
-            .set("Authorization", makeAuthHeader(userInvalidPassword))
             .expect(401, { error: "Unauthorized request" });
         });
       });
