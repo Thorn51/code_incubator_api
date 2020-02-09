@@ -3,10 +3,8 @@ const path = require("path");
 const logger = require("../logger");
 const UsersService = require("./users-service");
 const xss = require("xss");
-const {
-  requireAuth,
-  validateBearerToken
-} = require("../middleware/basic-auth");
+const { validateBearerToken } = require("../middleware/basic-auth");
+const { requireAuth } = require("../middleware/jwt-auth");
 
 const usersRouter = express.Router();
 const bodyParser = express.json();
