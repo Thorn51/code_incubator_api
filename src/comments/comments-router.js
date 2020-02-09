@@ -3,7 +3,7 @@ const path = require("path");
 const xss = require("xss");
 const logger = require("../logger");
 const CommentsService = require("./comments-service");
-const { requireAuth } = require("../middleware/basic-auth");
+const { requireAuth } = require("../middleware/jwt-auth");
 
 const commentsRouter = express.Router();
 const bodyParser = express.json();

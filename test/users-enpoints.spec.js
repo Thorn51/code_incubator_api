@@ -4,7 +4,7 @@ const app = require("../src/app");
 const { makeUsersArray, makeXssUser } = require("./fixtures");
 const bcrypt = require("bcryptjs");
 
-describe.only("Users Endpoints", () => {
+describe("Users Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
