@@ -5,7 +5,7 @@ const { makeUsersArray, makeXssUser } = require("./fixtures");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-describe.only("Users Endpoints", () => {
+describe("Users Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -41,7 +41,7 @@ describe.only("Users Endpoints", () => {
     return preppedUsers;
   }
 
-  describe.only("Protected endpoints", () => {
+  describe("Protected endpoints", () => {
     const testUsers = makeUsersArray();
 
     beforeEach("Insert test data", () => {
