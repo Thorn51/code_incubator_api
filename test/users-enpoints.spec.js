@@ -5,7 +5,7 @@ const { makeUsersArray, makeXssUser } = require("./fixtures");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-describe("Users Endpoints", () => {
+describe.only("Users Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -198,48 +198,210 @@ describe("Users Endpoints", () => {
   });
 
   describe("POST /api/users", () => {
-    it("Responds with status 201, return new user, and inserts new user into database", () => {
-      const newUser = {
-        first_name: "Test",
-        last_name: "Post",
-        email: "test.post@testing.com",
-        password: "testyPost1!",
-        nickname: "ElPosterOfTestiness1!"
-      };
-      return supertest(app)
-        .post("/api/users")
-        .set("Authorization", "bearer " + process.env.API_TOKEN)
-        .send(newUser)
-        .expect(201, { info: "Request completed " });
+    context("user validation", () => {
+      const testUsers = makeUsersArray();
+      const testUser = testUsers[0];
+
+      beforeEach("insert users", () => {
+        return db("users").insert(testUsers);
+      });
+
+      const requiredFields = [
+        "first_name",
+        "last_name",
+        "email",
+        "password",
+        "nickname"
+      ];
+
+      requiredFields.forEach(field => {
+        const newUser = {
+          first_name: "Test",
+          last_name: "Post",
+          email: "test.post@testing.com",
+          password: "testyPost1!",
+          nickname: "ElPosterOfTestiness1!"
+        };
+
+        it(`responds with status 400 when '${field}' is missing from request body`, () => {
+          delete newUser[field];
+
+          return supertest(app)
+            .post("/api/users")
+            .set("Authorization", "bearer " + process.env.API_TOKEN)
+            .send(newUser)
+            .expect(400, {
+              error: `Missing '${field}' in the request body`
+            });
+        });
+      });
+      it("responds with status 400 when password less than 8 characters", () => {
+        const shortPassword = {
+          first_name: "Test",
+          last_name: "Post",
+          email: "test.post@testing.com",
+          password: "Post1!",
+          nickname: "ElPosterOfTestiness1!"
+        };
+        return supertest(app)
+          .post("/api/users")
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(shortPassword)
+          .expect(400, {
+            error: "Password must be longer than 8 characters"
+          });
+      });
+      it("responds with status 400 when password is greater than 64 characters", () => {
+        const shortPassword = {
+          first_name: "Test",
+          last_name: "Post",
+          email: "test.post@testing.com",
+          password: "*".repeat(65),
+          nickname: "ElPosterOfTestiness1!"
+        };
+        return supertest(app)
+          .post("/api/users")
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(shortPassword)
+          .expect(400, {
+            error: "Password must be less than 64 characters"
+          });
+      });
+      it("responds with status 400 when password starts with space", () => {
+        const passwordStartsWithSpace = {
+          first_name: "Test",
+          last_name: "Post",
+          email: "test.post@testing.com",
+          password: " testyPost1!",
+          nickname: "ElPosterOfTestiness1!"
+        };
+        return supertest(app)
+          .post("/api/users")
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(passwordStartsWithSpace)
+          .expect(400, {
+            error: "Password must not start or end with empty spaces"
+          });
+      });
+      it("responds with status 400 when password ends with space", () => {
+        const passwordEndsWithSpace = {
+          first_name: "Test",
+          last_name: "Post",
+          email: "test.post@testing.com",
+          password: "testyPost1! ",
+          nickname: "ElPosterOfTestiness1!"
+        };
+        return supertest(app)
+          .post("/api/users")
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(passwordEndsWithSpace)
+          .expect(400, {
+            error: "Password must not start or end with empty spaces"
+          });
+      });
+      it("responds with status 400 when password does not contain one upper case, lower case, number, and special character", () => {
+        const passwordNotComplex = {
+          first_name: "Test",
+          last_name: "Post",
+          email: "test.post@testing.com",
+          password: "testyPost1",
+          nickname: "ElPosterOfTestiness1!"
+        };
+        return supertest(app)
+          .post("/api/users")
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(passwordNotComplex)
+          .expect(400, {
+            error:
+              "Password must contain 1 upper case, lower case, number, and special character"
+          });
+      });
+      it("responds with status 400 when invalid email submitted", () => {
+        const invalidEmail = {
+          first_name: "Test",
+          last_name: "Post",
+          email: "test.posttesting.com",
+          password: "testyPost1!",
+          nickname: "ElPosterOfTestiness1!"
+        };
+        return supertest(app)
+          .post("/api/users")
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(invalidEmail)
+          .expect(400, {
+            error: "Invalid email address"
+          });
+      });
+      it("responds with status 400 when user email already in database", () => {
+        const duplicateUser = {
+          first_name: testUser.first_name,
+          last_name: testUser.last_name,
+          email: testUser.email,
+          password: "testyPost1!",
+          nickname: testUser.nickname
+        };
+        return supertest(app)
+          .post("/api/users")
+          .set("Authorization", "bearer " + process.env.API_TOKEN)
+          .send(duplicateUser)
+          .expect(400, {
+            error: "The email is already taken"
+          });
+      });
     });
 
-    const requiredFields = [
-      "first_name",
-      "last_name",
-      "email",
-      "password",
-      "nickname"
-    ];
-
-    requiredFields.forEach(field => {
-      const newUser = {
-        first_name: "Test",
-        last_name: "Post",
-        email: "test.post@testing.com",
-        password: "testyPost1!",
-        nickname: "ElPosterOfTestiness1!"
-      };
-
-      it(`responds with status 400 when '${field}' is missing from request body`, () => {
-        delete newUser[field];
-
+    context("Happy path", () => {
+      it("responds with status 201, serialized user, strong bcrypt password", () => {
+        const newUser = {
+          first_name: "Test",
+          last_name: "Post",
+          email: "test.post@testing.com",
+          password: "testyPost1!",
+          nickname: "ElPosterOfTestiness1!"
+        };
         return supertest(app)
           .post("/api/users")
           .set("Authorization", "bearer " + process.env.API_TOKEN)
           .send(newUser)
-          .expect(400, {
-            error: { message: `Missing '${field}' in the request body` }
-          });
+          .expect(201)
+          .expect(res => {
+            expect(res.body).to.have.property("id");
+            expect(res.body.first_name).to.eql(newUser.first_name);
+            expect(res.body.last_name).to.eql(newUser.last_name);
+            expect(res.body.email).to.eq(newUser.email);
+            expect(res.body.nickname).to.eq(newUser.nickname);
+            expect(res.body).to.not.have.property("password");
+            expect(res.headers.location).to.eql(`/api/users/${res.body.id}`);
+            const expectedDate = new Date().toLocaleString("en", {
+              timeZone: "UTC"
+            });
+            const actualDate = new Date(res.body.date_created).toLocaleString();
+            expect(actualDate).to.eql(expectedDate);
+          })
+          .expect(res =>
+            db("users")
+              .select("*")
+              .where({ id: res.body.id })
+              .first()
+              .then(row => {
+                expect(row.first_name).to.eql(newUser.first_name);
+                expect(row.last_name).to.eql(newUser.last_name);
+                expect(row.email).to.eq(newUser.email);
+                expect(row.nickname).to.eq(newUser.nickname);
+                const expectedDate = new Date().toLocaleString("en", {
+                  timeZone: "UTC"
+                });
+                const actualDate = new Date(
+                  res.body.date_created
+                ).toLocaleString();
+                expect(actualDate).to.eql(expectedDate);
+
+                return bcrypt.compare(newUser.password, row.password);
+              })
+              .then(compareMatch => {
+                expect(compareMatch).to.be.true;
+              })
+          );
       });
     });
   });
