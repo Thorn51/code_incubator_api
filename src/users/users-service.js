@@ -1,32 +1,78 @@
+const xss = require("xss");
+const bcrypt = require("bcryptjs");
+
+const PASSWORD_REGEX = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&])[\S]+/;
+const EMAIL_REGEX = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+
 const UsersService = {
-  getAllUsers(knex) {
-    return knex.select("*").from("users");
+  hasUserWithEmail(db, email) {
+    return db("users")
+      .where({ email })
+      .first()
+      .then(user => !!user);
   },
-  insertUser(knex, newUser) {
-    return knex
+  validateEmail(email) {
+    if (!EMAIL_REGEX.test(email)) {
+      return "Invalid email address";
+    }
+  },
+  validatePassword(password) {
+    if (password.length < 8) {
+      return "Password must be longer than 8 characters";
+    }
+    if (password.length > 64) {
+      return "Password must be less than 64 characters";
+    }
+    if (password.startsWith(" ")) {
+      return "Password must not start or end with empty spaces";
+    }
+    if (password.endsWith(" ")) {
+      return "Password must not start or end with empty spaces";
+    }
+    if (!PASSWORD_REGEX.test(password)) {
+      return "Password must contain 1 upper case, lower case, number, and special character";
+    }
+  },
+  getAllUsers(db) {
+    return db.select("*").from("users");
+  },
+  insertUser(db, newUser) {
+    return db
       .insert(newUser)
       .into("users")
       .returning("*")
-      .then(rows => {
-        return rows[0];
-      });
+      .then(([user]) => user);
   },
-  getById(knex, id) {
-    return knex
+  getById(db, id) {
+    return db
       .from("users")
       .select("*")
       .where("id", id)
       .first();
   },
-  deleteUser(knex, id) {
-    return knex("users")
+  deleteUser(db, id) {
+    return db("users")
       .where({ id })
       .delete();
   },
-  updateUser(knex, id, updateFields) {
-    return knex("users")
+  updateUser(db, id, updateFields) {
+    return db("users")
       .where({ id })
       .update(updateFields);
+  },
+  hashPassword(password) {
+    return bcrypt.hash(password, 12);
+  },
+  serializeUser(user) {
+    return {
+      id: user.id,
+      first_name: xss(user.first_name),
+      last_name: xss(user.last_name),
+      email: xss(user.email),
+      nickname: xss(user.nickname),
+      votes: 0,
+      date_created: new Date(user.date_created)
+    };
   }
 };
 

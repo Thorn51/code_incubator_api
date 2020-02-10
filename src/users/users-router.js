@@ -9,16 +9,6 @@ const { requireAuth } = require("../middleware/jwt-auth");
 const usersRouter = express.Router();
 const bodyParser = express.json();
 
-const serializeUser = user => ({
-  id: user.id,
-  first_name: xss(user.first_name),
-  last_name: xss(user.last_name),
-  email: xss(user.email),
-  nickname: xss(user.nickname),
-  votes: user.votes,
-  date_created: user.date_created
-});
-
 usersRouter
   .route("/")
   .all(validateBearerToken)
@@ -41,62 +31,65 @@ usersRouter
     logger.info(`GET "/users" response status 200`);
   })
   .post(bodyParser, (req, res, next) => {
-    const {
-      first_name,
-      last_name,
-      email,
-      password,
-      nickname,
-      votes = 0
-    } = req.body;
+    const { first_name, last_name, email, password, nickname } = req.body;
 
-    const newUser = {
-      first_name: xss(first_name),
-      last_name: xss(last_name),
-      email: xss(email),
-      password: xss(password),
-      nickname: xss(nickname),
-      votes
-    };
+    for (const field of [
+      "first_name",
+      "last_name",
+      "email",
+      "password",
+      "nickname"
+    ])
+      if (!req.body[field]) {
+        logger.error(
+          `POST /api/users -> Missing '${field}' in the request body`
+        );
+        return res.status(400).json({
+          error: `Missing '${field}' in the request body`
+        });
+      }
 
-    if (!first_name) {
-      logger.error(`POST /api/users -> Missing first_name in the request body`);
-      return res.status(400).json({
-        error: { message: `Missing 'first_name' in the request body` }
-      });
-    }
-    if (!last_name) {
-      logger.error(`POST /api/users -> Missing last_name in the request body`);
-      return res.status(400).json({
-        error: { message: `Missing 'last_name' in the request body` }
-      });
-    }
-    if (!email) {
-      logger.error(`POST /api/users -> Missing email in the request body`);
-      return res.status(400).json({
-        error: { message: `Missing 'email' in the request body` }
-      });
-    }
-    if (!password) {
-      logger.error(`POST /api/users -> Missing password in the request body`);
-      return res.status(400).json({
-        error: { message: `Missing 'password' in the request body` }
-      });
-    }
-    if (!nickname) {
-      logger.error(`POST /api/users -> Missing nickname in the request body`);
-      return res.status(400).json({
-        error: { message: `Missing 'nickname' in the request body` }
-      });
+    const passwordError = UsersService.validatePassword(password);
+    const emailError = UsersService.validateEmail(email);
+
+    if (passwordError) {
+      logger.error(`POST /api/users -> ${passwordError}`);
+      return res.status(400).json({ error: passwordError });
     }
 
-    UsersService.insertUser(req.app.get("db"), newUser)
-      .then(user => {
-        logger.info(`POST /api/users -> user id=${user.id} created`);
-        res
-          .status(201)
-          .location(path.posix.join(req.originalUrl, `/${user.id}`))
-          .json({ info: "Request completed " });
+    if (emailError) {
+      logger.error(`POST /api/users -> ${emailError}`);
+      return res.status(400).json({ error: emailError });
+    }
+
+    UsersService.hasUserWithEmail(req.app.get("db"), email)
+      .then(hasUserWithEmail => {
+        if (hasUserWithEmail) {
+          logger.error(
+            `POST /api/users -> The submitted email is already taken`
+          );
+          return res.status(400).json({ error: "The email is already taken" });
+        }
+
+        return UsersService.hashPassword(password).then(hashedPassword => {
+          const newUser = {
+            first_name,
+            last_name,
+            email,
+            nickname,
+            password: hashedPassword,
+            date_created: "now()"
+          };
+
+          return UsersService.insertUser(req.app.get("db"), newUser).then(
+            user => {
+              res
+                .status(201)
+                .location(path.posix.join(req.originalUrl, `/${user.id}`))
+                .json(UsersService.serializeUser(user));
+            }
+          );
+        });
       })
       .catch(next);
   });
@@ -121,7 +114,7 @@ usersRouter
       .catch(next);
   })
   .get((req, res, next) => {
-    res.status(200).json(serializeUser(res.user));
+    res.status(200).json(UsersService.serializeUser(res.user));
     logger.info(`GET /users/:id -> user.id=${res.user.id} returned`);
   })
   .delete((req, res, next) => {
