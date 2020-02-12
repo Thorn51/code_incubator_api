@@ -8,7 +8,6 @@ const bodyParser = express.json();
 authRouter.post("/login", bodyParser, (req, res, next) => {
   const { email, password } = req.body;
   const loginUser = { email, password };
-  const knexInstance = req.app.get("db");
 
   for (const [key, value] of Object.entries(loginUser))
     if (value == null) {
