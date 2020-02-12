@@ -83,6 +83,7 @@ usersRouter
 
           return UsersService.insertUser(req.app.get("db"), newUser).then(
             user => {
+              logger.info(`POST /api/users -> User with id=${user.id} created`);
               res
                 .status(201)
                 .location(path.posix.join(req.originalUrl, `/${user.id}`))
