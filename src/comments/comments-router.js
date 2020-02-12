@@ -53,6 +53,8 @@ commentsRouter
 
     newComment.author = req.user.id;
 
+    console.log(newComment);
+
     CommentsService.insertComment(req.app.get("db"), newComment)
       .then(comment => {
         res
