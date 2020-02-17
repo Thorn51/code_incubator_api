@@ -1,9 +1,6 @@
 const IdeasService = {
   getAllIdeas(knex) {
-    return knex
-      .select("*")
-      .from("ideas")
-      .orderBy("date_submitted", "desc");
+    return knex.select("*").from("ideas");
   },
   insertIdea(knex, newIdea) {
     return knex
