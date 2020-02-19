@@ -12,11 +12,11 @@ All of the endpoints in the Code Incubator API require authorization. The first 
 
 The second level of authorization requires a user to be logged into the applicaiton. Without user authentication users are unable to visit protected endpoints.
 
-## Enpoints
+# Enpoints
 
 `[ Base URL: rocky-beyond-84426.herokuapp.com/api ]`
 
-### /ideas
+## /ideas
 
 Authorization -> API Token
 
