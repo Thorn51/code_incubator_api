@@ -20,9 +20,7 @@ The second level of authorization requires a user to be logged into the applicat
 
 ## Ideas
 
-### Endpoint -> /api/ideas
-
-#### `GET` /api/ideas
+### `GET` /api/ideas
 
 Authorization -> API Token
 
@@ -53,7 +51,7 @@ Code - 200
         }
     ]
 
-#### `POST` /api/ideas
+### `POST` /api/ideas
 
 Authorization -> JWT -> requires user login
 
@@ -79,10 +77,8 @@ Status - 201 Created
         "author": 2
     }
 
-### Endpoint -> /api/ideas/:id
+### `GET` /api/ideas/:id
 
-#### `GET` /api/ideas/:id
+### `DELETE` /api/ideas/:id
 
-#### `DELETE` /api/ideas/:id
-
-#### `PATCH` /api/ideas/:id
+### `PATCH` /api/ideas/:id
