@@ -18,9 +18,11 @@ The second level of authorization requires a user to be logged into the applicat
 
 `[ Base URL: rocky-beyond-84426.herokuapp.com ]`
 
-## Ideas Endpoint (/api/ideas)
+## Ideas Endpoint
 
-### `GET` /api/ideas
+### Endpoint -> /api/ideas
+
+#### `GET` /api/ideas
 
 Authorization -> API Token
 
@@ -51,7 +53,7 @@ Code - 200
         }
     ]
 
-### `POST` /api/ideas
+#### `POST` /api/ideas
 
 Authorization -> API Token
 
@@ -59,10 +61,10 @@ Response -> Application/json
 
 Code - 201
 
-## Ideas Endpoint (/api/ideas/:id)
+### Endpoint -> /api/ideas/:id
 
-### `GET` /api/ideas/:id
+#### `GET` /api/ideas/:id
 
-### `DELETE` /api/ideas/:id
+#### `DELETE` /api/ideas/:id
 
-### `PATCH` /api/ideas/:id
+#### `PATCH` /api/ideas/:id
