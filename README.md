@@ -12,9 +12,11 @@ The API is deployed to Heroku.
 
 All of the endpoints in the Code Incubator API are routed through authorization middleware. The first level of authorization requires a basic token. At this point, there is no mechanism in place to generate and share API tokens for use with the API.
 
-The second level of authorization requires a user to be logged into the application. Without user authentication users are unable to visit protected endpoints.
+The second level of authorization middleware creates a JSON Web Token (JWT) after a successful login.
 
-# Enpoints
+# Endpoints
+
+Scheme `HTTPS`
 
 `[ Base URL: rocky-beyond-84426.herokuapp.com ]`
 
@@ -26,7 +28,7 @@ Authorization -> API Token
 
 Response -> Application/json
 
-Code - 200
+Code - 200 Ok
 
     [
         {
@@ -78,6 +80,27 @@ Status - 201 Created
     }
 
 ### `GET` /api/ideas/:id
+
+Authorization -> JWT -> requires user login
+
+Response -> Application/json
+
+Parameter -> Idea ID
+
+Request /api/ideas/13
+
+Status - 202 Ok
+
+    {
+        "id": 13,
+        "project_title": "Documentation",
+        "project_summary": "Writing the documentation for the API.",
+        "date_submitted": "2020-02-19T20:03:58.787Z",
+        "github": "",
+        "votes": "0",
+        "status": "Idea",
+        "author": 2
+    }
 
 ### `DELETE` /api/ideas/:id
 
