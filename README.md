@@ -18,9 +18,9 @@ The second level of authorization requires a user to be logged into the applicai
 
 ## /ideas
 
-Authorization -> API Token
+**`GET` /ideas**
 
-`GET` /ideas
+Authorization -> API Token
 
 Response -> Application/json
 
