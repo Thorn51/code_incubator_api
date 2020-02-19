@@ -26,9 +26,9 @@ Scheme `HTTPS`
 
 Authorization -> API Token
 
-Response -> Application/json
+**Success -> Status 200 Ok**
 
-Code - 200 Ok
+Response -> Application/json
 
     [
         {
@@ -52,6 +52,12 @@ Code - 200 Ok
         "author": 2
         }
     ]
+
+**Failure -> Status 401**
+
+Only failure for fetching all ideas is if the bearer token is not submitted in the header.
+
+    { error: "Unauthorized request" }
 
 ### `POST` /api/ideas
 
