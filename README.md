@@ -55,11 +55,29 @@ Code - 200
 
 #### `POST` /api/ideas
 
-Authorization -> API Token
+Authorization -> JWT -> requires user login
+
+Request Body Requirements -> project_title & project_summary
+
+    {
+        "project_title": "Documentation",
+        "project_summary": "Writing the documentation for the API."
+    }
 
 Response -> Application/json
 
-Code - 201
+Status - 201 Created
+
+    {
+        "id": 13,
+        "project_title": "Documentation",
+        "project_summary": "Writing the documentation for the API.",
+        "date_submitted": "2020-02-19T20:03:58.787Z",
+        "github": "",
+        "votes": "0",
+        "status": "Idea",
+        "author": 2
+    }
 
 ### Endpoint -> /api/ideas/:id
 
