@@ -18,7 +18,7 @@ The second level of authorization requires a user to be logged into the applicat
 
 `[ Base URL: rocky-beyond-84426.herokuapp.com ]`
 
-## Ideas Endpoint
+## Ideas
 
 ### Endpoint -> /api/ideas
 
