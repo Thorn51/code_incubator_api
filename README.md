@@ -4,7 +4,7 @@ The Code Incubator API was developed as a capstone project in the Thinkful Engin
 
 ## Summary
 
-This api is designed to serve the [Code Incubator client](https://github.com/Thorn51/code_incubator_client). The API provides services to perform all CRUD operations. A summary of the endpoints and example of data can be found below.
+This API was created to serve the [Code Incubator client](https://github.com/Thorn51/code_incubator_client). The API provides services to perform CRUD operations on a PostgreSQL database. A summary of the endpoints and example of data can be found below.
 
 The API is deployed to Heroku.
 
@@ -12,7 +12,7 @@ The API is deployed to Heroku.
 
 All of the endpoints in the Code Incubator API are routed through authorization middleware. The first level of authorization requires a basic token. At this point, there is no mechanism in place to generate and share API tokens for use with the API.
 
-The second level of authorization middleware creates a JSON Web Token (JWT) after a successful login.
+The second level of authorization middleware creates a JSON Web Token (JWT) after a successful login. All endpoints below will indicate the type of authorization required to successfully fetch data.
 
 # Endpoints
 
@@ -104,4 +104,32 @@ Status - 202 Ok
 
 ### `DELETE` /api/ideas/:id
 
+Authorization -> JWT -> requires user login
+
+Parameter -> Idea ID
+
+Request /api/ideas/13
+
+Status - 204 No Content
+
 ### `PATCH` /api/ideas/:id
+
+Authorization -> JWT -> requires user login
+
+Response -> Application/json
+
+Parameter -> Idea ID
+
+Request /api/ideas/13
+
+Status - 202 Ok
+
+# Technologies
+
+- Node.js
+- Express
+- PostgreSQL
+- Bcrypt
+- JWT
+- Winston Logger
+- XSS
