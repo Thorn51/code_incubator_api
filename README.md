@@ -6,19 +6,21 @@ The Code Incubator API was developed as a capstone project in the Thinkful Engin
 
 This api is designed to serve the [Code Incubator client](https://github.com/Thorn51/code_incubator_client). The API provides services to perform all CRUD operations. A summary of the endpoints and example of data can be found below.
 
+The API is deployed to Heroku.
+
 ## Authorization
 
-All of the endpoints in the Code Incubator API require authorization. The first level of authorization requires a basic token. At this point, there is no mechanism in place to generate and share API tokens for use with the API.
+All of the endpoints in the Code Incubator API are routed through authorization middleware. The first level of authorization requires a basic token. At this point, there is no mechanism in place to generate and share API tokens for use with the API.
 
-The second level of authorization requires a user to be logged into the applicaiton. Without user authentication users are unable to visit protected endpoints.
+The second level of authorization requires a user to be logged into the application. Without user authentication users are unable to visit protected endpoints.
 
 # Enpoints
 
-`[ Base URL: rocky-beyond-84426.herokuapp.com/api ]`
+`[ Base URL: rocky-beyond-84426.herokuapp.com ]`
 
-## /ideas
+## /api/ideas
 
-**`GET` /ideas**
+### **`GET` /ideas**
 
 Authorization -> API Token
 
@@ -49,6 +51,14 @@ Code - 200
         }
     ]
 
-### /ideas/\${id}
+**`POST` /ideas**
+
+Authorization -> API Token
+
+Response -> Application/json
+
+Code - 201
+
+### /api/ideas/\${id}
 
 ### `
