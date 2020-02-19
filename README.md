@@ -26,7 +26,7 @@ Scheme `HTTPS`
 
 Authorization -> API Token
 
-**Success -> Status 200 Ok**
+#### Success -> Status 200 Ok
 
 Response -> Application/json
 
@@ -53,9 +53,9 @@ Response -> Application/json
         }
     ]
 
-**Failure -> Status 401**
+#### Error -> Status 401
 
-Only failure for fetching all ideas is if the bearer token is not submitted in the header.
+Request fails due to missing bearer token in header.
 
     { error: "Unauthorized request" }
 
@@ -70,9 +70,9 @@ Request Body Requirements -> project_title & project_summary
         "project_summary": "Writing the documentation for the API."
     }
 
-Response -> Application/json
+#### Success -> Status 201 Created
 
-Status - 201 Created
+Response -> Application/json
 
     {
         "id": 13,
@@ -129,6 +129,8 @@ Parameter -> Idea ID
 Request /api/ideas/13
 
 Status - 202 Ok
+
+# Scripts
 
 # Technologies
 
