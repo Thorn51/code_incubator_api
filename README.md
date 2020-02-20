@@ -132,13 +132,13 @@ Status - 202 Ok
 
 # Scripts
 
-`npm start` - Starts the server in local development mode.
-`npm run dev` - Starts the server with [nodemon](https://www.npmjs.com/package/nodemon). Very helpful during development!
-`npm test` - Runs Mocha test files.
-`npm run migrate` - Uses postgrator to build out tables in the database.
-`npm run migrate:test` - Uses postgrator to build tables in a test database. The test database is used during integration testing.
-`npm run migrate:production` - Build database tables in Heroku.
-`npm run deploy` - Deploys to Heroku.
+- `npm start` - Starts the server in local development mode.
+- `npm run dev` - Starts the server with [nodemon](https://www.npmjs.com/package/nodemon). Very helpful during development!
+- `npm test` - Runs Mocha test files.
+- `npm run migrate` - Uses postgrator to build out tables in the database.
+- `npm run migrate:test` - Uses postgrator to build tables in a test database. The test database is used during integration testing.
+- `npm run migrate:production` - Build database tables in Heroku.
+- `npm run deploy` - Deploys to Heroku.
 
 # Technologies
 
