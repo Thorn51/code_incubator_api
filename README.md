@@ -217,15 +217,62 @@ Request fails when the idea doesn't exist.
 
 ### `PATCH` /api/ideas/:id
 
-Authorization -> JWT -> requires user login
+Edit an idea in the database. Requires JWT for authorization middleware.
 
-Response -> Application/json
+**Required URL Parameters**
 
-Parameter -> Idea ID
+`id=[integer]`
 
-Request /api/ideas/13
+**Request Body Requirements**
+The request body must contain one or all of the editable fields.
 
-Status - 202 Ok
+- project_title
+- project_summary
+- status
+- votes
+
+**Request**
+
+    PATCH /api/ideas/13
+    Authorization: JWT
+    Request Body:
+        {
+            "project_title": "Documentation Title Patch"
+        }
+
+**Response**
+
+    Status 200
+
+    { info: "Request completed" }
+
+**Response Error**
+
+Request fails without JWT.
+
+    Status 401 Unauthorized
+
+    {
+        "error": "Unauthorized request"
+    }
+
+Request fails when the idea doesn't exist.
+
+    Status 404 Not Found
+
+    {
+        "error": {
+            "message": "Idea doesn't exist"
+        }
+    }
+
+Request fails when required field is missing from request body.
+
+    {
+        "error": {
+            "message": "Request body must contain project_title, project_summary, status, and or votes"
+        }
+    }
 
 # Scripts
 
