@@ -24,11 +24,7 @@ Scheme `HTTPS`
 
 Methods
 
-`GET`
-
-- `POST`
-- `DELETE`
-- `PATCH`
+`GET` || `POST` || `DELETE` || `PATCH`
 
 ### `GET` /api/ideas
 
