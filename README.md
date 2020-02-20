@@ -180,13 +180,40 @@ Request fails when the idea doesn't exist.
 
 ### `DELETE` /api/ideas/:id
 
-Authorization -> JWT -> requires user login
+Remove an idea from the database. Requires JWT for authorization middleware.
 
-Parameter -> Idea ID
+**Required URL Parameters**
 
-Request /api/ideas/13
+`id=[integer]`
 
-Status - 204 No Content
+**Request**
+
+    GET /api/ideas/13
+    Authorization: JWT
+
+**Response**
+
+    Status - 204 No Content
+
+**Response Error**
+
+Request fails without JWT.
+
+    Status 401 Unauthorized
+
+    {
+        "error": "Unauthorized request"
+    }
+
+Request fails when the idea doesn't exist.
+
+    Status 404 Not Found
+
+    {
+        "error": {
+            "message": "Idea doesn't exist"
+        }
+    }
 
 ### `PATCH` /api/ideas/:id
 
