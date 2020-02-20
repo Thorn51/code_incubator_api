@@ -12,7 +12,7 @@ The API is deployed to Heroku.
 
 All of the endpoints in the Code Incubator API are routed through authorization middleware. The first level of authorization requires a basic token. At this point, there is no mechanism in place to generate and share API tokens for use with the API.
 
-The second level of authorization middleware creates a JSON Web Token (JWT) after a successful login. All endpoints below will indicate the type of authorization required to successfully fetch data.
+The second level of authorization middleware creates a JSON Web Token (JWT) after a successful login. All endpoints below will indicate the type of authorization required to successfully perform CRUD operations on the database.
 
 # Endpoints
 
@@ -77,6 +77,7 @@ Request Body Requirements -> project_title & project_summary
 #### Request Success
 
 Status 201 Created
+
 Response -> Application/json
 
     {
@@ -120,13 +121,10 @@ Get an idea using the idea id.
 
 Authorization -> JWT -> requires user login
 
-Response -> Application/json
-
-Parameter -> Idea ID
-
-Request /api/ideas/13
-
-Status - 202 Ok
+    Parameter -> Idea ID
+    Request /api/ideas/13
+    Status - 202 Ok
+    Response -> Application/json
 
     {
         "id": 13,
