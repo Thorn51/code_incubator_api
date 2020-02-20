@@ -24,7 +24,8 @@ Scheme `HTTPS`
 
 Methods
 
-- `GET`
+`GET`
+
 - `POST`
 - `DELETE`
 - `PATCH`
