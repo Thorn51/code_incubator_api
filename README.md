@@ -117,14 +117,19 @@ Status 400 Bad request. Request fails when missing project_summary in request bo
 
 ### `GET` /api/ideas/:id
 
-Get an idea using the idea id.
+Get an idea using the idea id. Requires JWT for authorization middleware.
 
-Authorization -> JWT -> requires user login
+**Required URL Parameters**
 
-    Parameter -> Idea ID
-    Request /api/ideas/13
-    Status - 202 Ok
-    Response -> Application/json
+`id=[integer]`
+
+**Request**
+
+    GET /api/ideas/13
+
+**Response**
+
+    Status 200 Ok
 
     {
         "id": 13,
