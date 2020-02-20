@@ -188,7 +188,7 @@ Remove an idea from the database. Requires JWT for authorization middleware.
 
 **Request**
 
-    GET /api/ideas/13
+    DELETE /api/ideas/13
     Authorization: JWT
 
 **Response**
