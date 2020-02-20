@@ -141,6 +141,7 @@ Get an idea using the idea id. Requires JWT for authorization middleware.
 **Request**
 
     GET /api/ideas/13
+    Authorization: JWT
 
 **Response**
 
@@ -155,6 +156,26 @@ Get an idea using the idea id. Requires JWT for authorization middleware.
         "votes": "0",
         "status": "Idea",
         "author": 2
+    }
+
+**Response Error**
+
+Request fails without JWT.
+
+    Status 401 Unauthorized
+
+    {
+        "error": "Unauthorized request"
+    }
+
+Request fails when the idea doesn't exist.
+
+    Status 404 Not Found
+
+    {
+        "error": {
+            "message": "Idea doesn't exist"
+        }
     }
 
 ### `DELETE` /api/ideas/:id
