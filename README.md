@@ -22,6 +22,13 @@ Scheme `HTTPS`
 
 ## Ideas
 
+Methods
+
+- `GET`
+- `POST`
+- `DELETE`
+- `PATCH`
+
 ### `GET` /api/ideas
 
 Request all of the ideas. Requires basic token for authorization.
