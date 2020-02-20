@@ -24,6 +24,8 @@ Scheme `HTTPS`
 
 ### `GET` /api/ideas
 
+Request all of the ideas.
+
 Authorization -> API Token
 
 #### Success -> Status 200 Ok
@@ -55,11 +57,13 @@ Response -> Application/json
 
 #### Error -> Status 401
 
-Request fails due to missing bearer token in header.
+Request fails due to missing basic token in header.
 
     { error: "Unauthorized request" }
 
 ### `POST` /api/ideas
+
+Submit a new idea.
 
 Authorization -> JWT -> requires user login
 
@@ -70,8 +74,9 @@ Request Body Requirements -> project_title & project_summary
         "project_summary": "Writing the documentation for the API."
     }
 
-#### Success -> Status 201 Created
+#### Request Success
 
+Status 201 Created
 Response -> Application/json
 
     {
@@ -85,7 +90,33 @@ Response -> Application/json
         "author": 2
     }
 
+#### Request Error
+
+Status 401 Unauthorized. Request fails without JWT.
+
+    {
+        "error": "Unauthorized request"
+    }
+
+Status 400 Bad request. Request fails when missing project_title in request body,
+
+    {
+        "error": {
+            "message": "Missing 'project_title' in request body."
+        }
+    }
+
+Status 400 Bad request. Request fails when missing project_summary in request body,
+
+    {
+        "error": {
+            "message": "Missing 'project_summary' in request body."
+        }
+    }
+
 ### `GET` /api/ideas/:id
+
+Get an idea using the idea id.
 
 Authorization -> JWT -> requires user login
 
