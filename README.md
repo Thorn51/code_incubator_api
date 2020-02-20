@@ -100,7 +100,7 @@ Submit a new idea. Requires JWT for authorization middleware.
         "author": 2
     }
 
-_Request Error_
+**Request Error**
 
 Request fails without JWT.
 
