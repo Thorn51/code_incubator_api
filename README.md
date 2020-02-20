@@ -24,13 +24,16 @@ Scheme `HTTPS`
 
 ### `GET` /api/ideas
 
-Request all of the ideas.
+Request all of the ideas. Requires basic token for authorization.
 
-Authorization -> API Token
+**Request**
 
-#### Success -> Status 200 Ok
+    GET /api/ideas
+    Authorization: API Token
 
-Response -> Application/json
+**Response**
+
+    Status 200 Ok
 
     [
         {
@@ -55,30 +58,36 @@ Response -> Application/json
         }
     ]
 
-#### Error -> Status 401
+**Request Error**
 
-Request fails due to missing basic token in header.
+Request fails due to missing authorization basic token in header.
+
+    Status 401 Unauthorized
 
     { error: "Unauthorized request" }
 
 ### `POST` /api/ideas
 
-Submit a new idea.
+Submit a new idea. Requires JWT for authorization middleware.
 
-Authorization -> JWT -> requires user login
+**Request Body Requirements**
 
-Request Body Requirements -> project_title & project_summary
+- "project_title"
+- "project_summary"
 
-    {
-        "project_title": "Documentation",
-        "project_summary": "Writing the documentation for the API."
-    }
+**Request**
 
-#### Request Success
+    POST /api/ideas
+    Authorization: JWT
+    Request Body:
+        {
+            "project_title": "Documentation",
+            "project_summary": "Writing the documentation for the API."
+        }
 
-Status 201 Created
+**Response**
 
-Response -> Application/json
+    Status 201 Created
 
     {
         "id": 13,
@@ -91,15 +100,19 @@ Response -> Application/json
         "author": 2
     }
 
-#### Request Error
+_Request Error_
 
-Status 401 Unauthorized. Request fails without JWT.
+Request fails without JWT.
+
+    Status 401 Unauthorized
 
     {
         "error": "Unauthorized request"
     }
 
-Status 400 Bad request. Request fails when missing project_title in request body,
+Request fails when project_title missing in request body.
+
+    Status 400 Bad request
 
     {
         "error": {
@@ -107,7 +120,9 @@ Status 400 Bad request. Request fails when missing project_title in request body
         }
     }
 
-Status 400 Bad request. Request fails when missing project_summary in request body,
+Request fails when project_summary missing in request body.
+
+    Status 400 Bad request
 
     {
         "error": {
