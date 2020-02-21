@@ -9,6 +9,7 @@ const { requireAuth } = require("../middleware/jwt-auth");
 const ideasRouter = express.Router();
 const bodyParser = express.json();
 
+// SECURITY -> remove XSS content from ideas
 const serializeIdea = idea => ({
   id: idea.id,
   project_title: xss(idea.project_title),
@@ -22,6 +23,7 @@ const serializeIdea = idea => ({
 
 ideasRouter
   .route("/")
+  //Get all ideas
   .get(validateBearerToken, (req, res, next) => {
     const knexInstance = req.app.get("db");
     IdeasService.getAllIdeas(knexInstance)
@@ -42,6 +44,7 @@ ideasRouter
       .catch(next);
     logger.info(`GET "/api/ideas" response status 200`);
   })
+  //Create and insert a new idea into db
   .post(requireAuth, bodyParser, (req, res, next) => {
     const {
       project_title,
@@ -89,6 +92,7 @@ ideasRouter
 ideasRouter
   .route("/:id")
   .all(requireAuth)
+  //Get an idea by its db id
   .all((req, res, next) => {
     IdeasService.getById(req.app.get("db"), req.params.id)
       .then(idea => {
@@ -109,6 +113,7 @@ ideasRouter
     res.status(200).json(serializeIdea(res.idea));
     logger.info(`GET "/api/ideas/:id" -> idea id=${req.params.id} returned`);
   })
+  //remove idea from database
   .delete((req, res, next) => {
     const { id } = req.params;
 
@@ -119,6 +124,7 @@ ideasRouter
       })
       .catch(next);
   })
+  //edit idea
   .patch(bodyParser, (req, res, next) => {
     const { project_title, project_summary, status, votes } = req.body;
     const ideaUpdate = { project_title, project_summary, status, votes };

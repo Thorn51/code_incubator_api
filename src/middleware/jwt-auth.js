@@ -1,5 +1,6 @@
 const AuthService = require("../auth/auth-service");
 
+// Check and confirm JWT
 function requireAuth(req, res, next) {
   const authToken = req.get("Authorization") || "";
   let bearerToken;

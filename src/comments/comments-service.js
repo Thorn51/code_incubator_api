@@ -1,3 +1,4 @@
+//Perform operations on the comments table in db
 const CommentsService = {
   getAllComments(knex) {
     return knex.select("*").from("comments");

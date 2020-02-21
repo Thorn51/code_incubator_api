@@ -1,9 +1,12 @@
 const xss = require("xss");
 const bcrypt = require("bcryptjs");
 
+//Regex ensures that password is 8 to 64 characters long and contains a mix of upper and lower case characters, one numeric and one special character from regexr.com -> Strong Password Validator
 const PASSWORD_REGEX = /((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,64})/;
+//Regex Email Validation as per RFC2822 standards from regexr.com -> RFC2822 Email Verification
 const EMAIL_REGEX = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
 
+//Perform operations on users in db
 const UsersService = {
   hasUserWithEmail(db, email) {
     return db("users")

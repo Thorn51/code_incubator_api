@@ -8,6 +8,7 @@ const { requireAuth } = require("../middleware/jwt-auth");
 const commentsRouter = express.Router();
 const bodyParser = express.json();
 
+//SECURITY -> Remove xss content from comments
 const serializeComment = comment => ({
   id: comment.id,
   comment_text: xss(comment.comment_text),
@@ -20,6 +21,7 @@ const serializeComment = comment => ({
 commentsRouter
   .route("/")
   .all(requireAuth)
+  //get all comments
   .get((req, res, next) => {
     CommentsService.getAllComments(req.app.get("db"))
       .then(comments => {
@@ -37,6 +39,7 @@ commentsRouter
       .catch(next);
     logger.info(`GET "/comments" response status 200`);
   })
+  //Create a new comment and insert it into db
   .post(bodyParser, (req, res, next) => {
     const { comment_text, project } = req.body;
     const newComment = {
@@ -67,6 +70,7 @@ commentsRouter
 commentsRouter
   .route("/:id")
   .all(requireAuth)
+  //Get a comment by ID
   .all((req, res, next) => {
     const { id } = req.params;
 
@@ -87,6 +91,7 @@ commentsRouter
     res.status(200).json(serializeComment(res.comment));
     logger.info(`GET /comments/${req.params.id} returned`);
   })
+  //Remove comment from db
   .delete((req, res, next) => {
     CommentsService.deleteComment(req.app.get("db"), req.params.id)
       .then(() => {
@@ -95,6 +100,7 @@ commentsRouter
       })
       .catch(next);
   })
+  //Edit comment
   .patch(bodyParser, (req, res, next) => {
     const { comment_text, votes } = req.body;
     const commentUpdate = { comment_text, votes };

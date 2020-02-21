@@ -5,6 +5,7 @@ const logger = require("../logger");
 const authRouter = express.Router();
 const bodyParser = express.json();
 
+//Router for login endpoint
 authRouter.post("/login", bodyParser, (req, res, next) => {
   const { email, password } = req.body;
   const loginUser = { email, password };
@@ -17,6 +18,7 @@ authRouter.post("/login", bodyParser, (req, res, next) => {
       });
     }
 
+  //check if user exists in db
   AuthService.getUserWithUserName(req.app.get("db"), loginUser.email)
     .then(dbUser => {
       if (!dbUser) {
@@ -27,6 +29,7 @@ authRouter.post("/login", bodyParser, (req, res, next) => {
           error: "Incorrect user_name or password"
         });
       }
+      //if user exists check password
       return AuthService.comparePasswords(
         loginUser.password,
         dbUser.password
@@ -40,6 +43,7 @@ authRouter.post("/login", bodyParser, (req, res, next) => {
         logger.info(
           `POST /api/auth/login -> user id ${dbUser.id} login successful`
         );
+        //create JWT and send in response
         const sub = dbUser.email;
         const payload = { user_id: dbUser.id };
         res.send({

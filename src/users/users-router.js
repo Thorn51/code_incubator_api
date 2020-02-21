@@ -12,10 +12,12 @@ const bodyParser = express.json();
 usersRouter
   .route("/")
   .all(validateBearerToken)
+  //Get all users
   .get((req, res, next) => {
     UsersService.getAllUsers(req.app.get("db"))
       .then(users => {
         res.status(200).json(
+          //SECURITY -> remove XSS content
           users.map(user => ({
             id: user.id,
             first_name: xss(user.first_name),
@@ -30,6 +32,7 @@ usersRouter
       .catch(next);
     logger.info(`GET "/users" response status 200`);
   })
+  //Create new user -> registration
   .post(bodyParser, (req, res, next) => {
     const { first_name, last_name, email, password, nickname } = req.body;
 
@@ -61,7 +64,7 @@ usersRouter
       logger.error(`POST /api/users -> ${emailError}`);
       return res.status(400).json({ error: emailError });
     }
-
+    //Check if email has already been used.
     UsersService.hasUserWithEmail(req.app.get("db"), email)
       .then(hasUserWithEmail => {
         if (hasUserWithEmail) {
@@ -70,7 +73,7 @@ usersRouter
           );
           return res.status(400).json({ error: "The email is already taken" });
         }
-
+        //If no email in db then hash new password
         return UsersService.hashPassword(password).then(hashedPassword => {
           const newUser = {
             first_name,
@@ -80,7 +83,7 @@ usersRouter
             password: hashedPassword,
             date_created: "now()"
           };
-
+          //Insert new user
           return UsersService.insertUser(req.app.get("db"), newUser).then(
             user => {
               logger.info(`POST /api/users -> User with id=${user.id} created`);
@@ -98,6 +101,7 @@ usersRouter
 usersRouter
   .route("/:id")
   .all(requireAuth)
+  //get user by db id
   .all((req, res, next) => {
     UsersService.getById(req.app.get("db"), req.params.id)
       .then(user => {
@@ -118,6 +122,7 @@ usersRouter
     res.status(200).json(UsersService.serializeUser(res.user));
     logger.info(`GET /users/:id -> user.id=${res.user.id} returned`);
   })
+  //remove user
   .delete((req, res, next) => {
     const { id } = req.params;
 
@@ -128,6 +133,7 @@ usersRouter
       })
       .catch(next);
   })
+  //edit user
   .patch(bodyParser, (req, res, next) => {
     const { first_name, last_name, email, nickname, password } = req.body;
 

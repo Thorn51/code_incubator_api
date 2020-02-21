@@ -10,14 +10,19 @@ const authRouter = require("./auth/auth-router");
 
 const app = express();
 
+//SECURITY -> helmet hides sensitive data in headers
 app.use(helmet());
+
+//Allow cross-origin resource sharing
 app.use(cors());
 
+// routers
 app.use("/api/ideas", ideasRouter);
 app.use("/api/comments", commentsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/auth", authRouter);
 
+//Middleware that catches and handles errors
 app.use(function errorHandler(error, req, res, next) {
   let response;
   if (NODE_ENV === "production") {

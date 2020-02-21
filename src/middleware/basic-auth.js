@@ -1,6 +1,7 @@
 const AuthService = require("../auth/auth-service");
 const logger = require("../logger");
 
+//Check for basic authorization
 function requireAuth(req, res, next) {
   const authToken = req.get("Authorization") || "";
   let basicToken;
@@ -37,6 +38,7 @@ function requireAuth(req, res, next) {
   });
 }
 
+// Check for API Token
 function validateBearerToken(req, res, next) {
   const apiToken = process.env.API_TOKEN;
   const authToken = req.get("Authorization");

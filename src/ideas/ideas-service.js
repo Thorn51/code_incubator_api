@@ -1,3 +1,4 @@
+//Perform db operations on ideas
 const IdeasService = {
   getAllIdeas(knex) {
     return knex.select("*").from("ideas");
