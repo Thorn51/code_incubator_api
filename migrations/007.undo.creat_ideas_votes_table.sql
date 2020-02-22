@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS ideas_votes;
+DROP TABLE IF EXISTS idea_vote;
