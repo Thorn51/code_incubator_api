@@ -1,4 +1,4 @@
-TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE;
+TRUNCATE comments_votes, ideas_votes, comments, ideas, users, RESTART IDENTITY CASCADE;
 
 INSERT INTO users (first_name, last_name, email, password, nickname, votes, date_created) 
     VALUES('John', 'Doe', 'jdoe@developmenttesting.com', '$2a$12$d515ftTi6hRTdV.0r1xr5.Hbrd8V3W0yIA0guPghw6I6DQRADzCGm', 'code_guru', '77', '2020-12-21T07:00:00.000Z'),
@@ -28,6 +28,8 @@ INSERT INTO comments (comment_text, votes, date_submitted, author, project)
         ('Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.', 8, '2020-01-30T07:00:00.000Z', 1, 4),
         ('Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.', 7, '2020-01-30T07:00:00.000Z', 2, 4),
         ('Ne velit facilis deserunt nam, eum lucilius constituto ex. Odio rebum dignissim ad mel, an ius tollit veniam, vix vidit mazim homero ad. Paulo definitiones et mei, nam ne illum scripta. Zril senserit at has, at est clita eirmod moderatius. Et mnesarchum posidonium sea, aliquid debitis oportere qui et. Vix no ullum adipiscing, an qui nulla temporibus.', 5, '2020-01-30T07:00:00.000Z', 3, 4);
+
+
 
 
 
