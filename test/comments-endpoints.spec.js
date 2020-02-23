@@ -25,13 +25,13 @@ describe("Comments Endpoints", () => {
 
   before("Remove data from table", () =>
     db.raw(
-      "TRUNCATE comments_votes, ideas_votes, comments, ideas, users RESTART IDENTITY CASCADE"
+      "TRUNCATE comment_vote, idea_vote, comments, ideas, users RESTART IDENTITY CASCADE"
     )
   );
 
   afterEach(() =>
     db.raw(
-      "TRUNCATE comments_votes, ideas_votes, comments, ideas, users RESTART IDENTITY CASCADE"
+      "TRUNCATE comment_vote, idea_vote, comments, ideas, users RESTART IDENTITY CASCADE"
     )
   );
 
