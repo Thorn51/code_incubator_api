@@ -261,11 +261,41 @@ function makeXssComment() {
   ];
 }
 
+function makeCommentVoteArray() {
+  return [
+    {
+      id: 1,
+      vote_by_user: 1,
+      comment: 1,
+      vote: "1"
+    },
+    {
+      id: 2,
+      vote_by_user: 2,
+      comment: 2,
+      vote: "-1"
+    },
+    {
+      id: 3,
+      vote_by_user: 3,
+      comment: 3,
+      vote: "1"
+    },
+    {
+      id: 4,
+      vote_by_user: 4,
+      comment: 4,
+      vote: "-1"
+    }
+  ];
+}
+
 module.exports = {
   makeIdeasArray,
   makeXssIdea,
   makeCommentsArray,
   makeUsersArray,
   makeXssUser,
-  makeXssComment
+  makeXssComment,
+  makeCommentVoteArray
 };
