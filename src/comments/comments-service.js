@@ -28,15 +28,6 @@ const CommentsService = {
     return knex("comments")
       .where({ id })
       .update(updateFields);
-  },
-  insertCommentVotes(knex, vote) {
-    return knex
-      .into("comments_votes")
-      .insert(vote)
-      .returning("*")
-      .then(rows => {
-        return rows[0];
-      });
   }
 };
 
