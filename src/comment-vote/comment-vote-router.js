@@ -1,6 +1,5 @@
 const express = require("express");
 const path = require("path");
-const xss = require("xss");
 const logger = require("../logger");
 const CommentVoteService = require("./comment-vote-service");
 const { requireAuth } = require("../middleware/jwt-auth");
