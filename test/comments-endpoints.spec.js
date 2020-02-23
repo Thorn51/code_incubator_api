@@ -294,57 +294,6 @@ describe("Comments Endpoints", () => {
     });
   });
 
-  describe("POST /api/comments/votes", () => {
-    const testUsers = makeUsersArray();
-    const testIdeas = makeIdeasArray();
-    const testComments = makeCommentsArray();
-
-    beforeEach("Insert test data", () => {
-      return db("users")
-        .insert(prepUsers(testUsers))
-        .then(() => {
-          return db
-            .into("ideas")
-            .insert(testIdeas)
-            .then(() => {
-              return db.into("comments").insert(testComments);
-            });
-        });
-    });
-
-    it("Responds with status 201 and records vote in database", () => {
-      const newVote = {
-        vote: 1,
-        comment_id: 1
-      };
-      return supertest(app)
-        .post("/api/comments/votes")
-        .set("Authorization", makeAuthHeader(testUsers[0]))
-        .send(newVote)
-        .expect(201)
-        .expect(res => {
-          expect(res.body.vote).to.eql(newVote.vote);
-          expect(res.body.comment_id).to.eql(newVote.comment_id);
-          expect(res.body).to.have.property("id");
-          expect(res.body).to.have.property("vote_by_user");
-          expect(res.body).to.have.property("date_submitted");
-          expect(res.headers.location).to.eql(
-            `/api/comments/votes${res.body.id}`
-          );
-        });
-    });
-
-    it(`responds with status 400 when 'vote' is missing from request body`, () => {
-      return supertest(app)
-        .post("/api/comments/votes")
-        .set("Authorization", makeAuthHeader(testUsers[0]))
-        .send({})
-        .expect(400, {
-          error: { message: `Missing 'vote' in the request body` }
-        });
-    });
-  });
-
   describe("DELETE /api/comments/:id", () => {
     const testUsers = makeUsersArray();
     context("no data in the comments table", () => {
