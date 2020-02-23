@@ -91,7 +91,7 @@ commentsRouter
     res.status(200).json(serializeComment(res.comment));
     logger.info(`GET /comments/${req.params.id} returned`);
   })
-  //Remove comment from db
+  //Remove comment from db -> Wired up in api but currently not used in client
   .delete((req, res, next) => {
     CommentsService.deleteComment(req.app.get("db"), req.params.id)
       .then(() => {
@@ -100,7 +100,7 @@ commentsRouter
       })
       .catch(next);
   })
-  //Edit comment
+  //Edit comment -> Wired up in api but currently not used in client
   .patch(bodyParser, (req, res, next) => {
     const { comment_text, votes } = req.body;
     const commentUpdate = { comment_text, votes };
@@ -124,36 +124,6 @@ commentsRouter
       .then(numRowsAffected => {
         res.status(200).json({ info: "Request completed" });
         logger.info(`PATCH /api/comments/${req.params.id} -> comment edited`);
-      })
-      .catch(next);
-  });
-
-commentsRouter
-  .route("/votes")
-  //Create a new comment and insert it into db
-  .post(bodyParser, (req, res, next) => {
-    const { vote, comment_id } = req.body;
-    const commentVote = {
-      vote: vote,
-      comment: comment_id
-    };
-
-    if (!vote) {
-      logger.error(`POST "/comments/votes" missing 'vote' in request body`);
-      return res.status(400).json({
-        error: { message: `Missing 'vote' in the request body` }
-      });
-    }
-
-    commentVote.vote_by_user = req.user.id;
-
-    CommentsService.insertCommentVotes(req.app.get("db"), commentVote)
-      .then(vote => {
-        res
-          .status(201)
-          .location(path.posix.join(req.originalUrl, `/${vote.id}`))
-          .json(vote);
-        logger.info(`POST "/comments/votes" comment id=${vote.id} created`);
       })
       .catch(next);
   });
