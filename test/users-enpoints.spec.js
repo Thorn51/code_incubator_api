@@ -5,7 +5,7 @@ const { makeUsersArray, makeXssUser } = require("./fixtures");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-describe("Users Endpoints", () => {
+describe.only("Users Endpoints", () => {
   let db;
 
   before("Make knex instance with test database", () => {
@@ -19,10 +19,14 @@ describe("Users Endpoints", () => {
   after("Disconnect from test database", () => db.destroy());
 
   before("Clean table", () =>
-    db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
+    db.raw(
+      `TRUNCATE comment_vote, idea_vote, comments, ideas, users RESTART IDENTITY CASCADE`
+    )
   );
   afterEach("Remove data after each test", () =>
-    db.raw(`TRUNCATE comments, ideas, users RESTART IDENTITY CASCADE`)
+    db.raw(
+      `TRUNCATE comment_vote, idea_vote, comments, ideas, users RESTART IDENTITY CASCADE`
+    )
   );
 
   function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
