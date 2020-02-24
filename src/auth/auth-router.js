@@ -45,7 +45,7 @@ authRouter.post("/login", bodyParser, (req, res, next) => {
         );
         //create JWT and send in response
         const sub = dbUser.email;
-        const payload = { user_id: dbUser.id };
+        const payload = { user_id: dbUser.id, first_name: dbUser.first_name };
         res.send({
           authToken: AuthService.createJwt(sub, payload)
         });
