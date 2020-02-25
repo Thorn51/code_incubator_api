@@ -38,6 +38,9 @@ ideaVoteRouter
 
     IdeaVoteService.insertVote(req.app.get("db"), newVote)
       .then(result => {
+        logger.info(
+          `POST /api/idea/vote/ -> idea vote id=${result.id} created`
+        );
         res
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${result.id}`))
