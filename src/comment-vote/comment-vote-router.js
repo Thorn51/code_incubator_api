@@ -38,6 +38,7 @@ commentVoteRouter
 
     CommentVoteService.insertVote(req.app.get("db"), newVote)
       .then(result => {
+        logger.info(`POST /api/comment/vote/${comment_id} -> created`);
         res
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${result.id}`))
